@@ -1,5 +1,8 @@
 package parser
 
+import ast.Expr
+import ast.ExprRecordItem
+
 
 private object ExprPrecedence {
     val or = 1

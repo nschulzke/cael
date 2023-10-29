@@ -1,5 +1,9 @@
 package parser
 
+import ast.ExprRecordItem
+import ast.PatternRecordItem
+import ast.TypeRecordItem
+
 fun PeekableIterator<Token>.parseTypeRecordItem(): TypeRecordItem {
     val name = parseIdentifier()
     expect(Token.Colon)

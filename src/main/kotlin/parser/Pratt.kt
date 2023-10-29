@@ -1,5 +1,6 @@
 package parser
 
+import ast.Node
 import kotlin.reflect.KClassifier
 
 class Pratt<T : Node>(

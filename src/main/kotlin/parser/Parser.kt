@@ -1,5 +1,8 @@
 package parser
 
+import ast.Decl
+import ast.Program
+
 fun Sequence<Token>.parse(): Program {
     val iterator = PeekableIterator(this.iterator())
     val members = mutableListOf<Decl>()

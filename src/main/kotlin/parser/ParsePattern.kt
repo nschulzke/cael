@@ -1,5 +1,8 @@
 package parser
 
+import ast.Pattern
+import ast.PatternRecordItem
+
 
 fun PeekableIterator<Token>.parsePattern(): Pattern {
     return when (val token = next()) {

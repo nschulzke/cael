@@ -1,5 +1,7 @@
 package parser
 
+import ast.*
+
 fun PeekableIterator<Token>.parseDecl(): Decl {
     return when (val token = peek()) {
         is Token.Module -> parseModuleDecl()

@@ -1,5 +1,7 @@
 package parser
 
+import ast.Type
+
 
 private object TypePrecedence {
     val union = 1
