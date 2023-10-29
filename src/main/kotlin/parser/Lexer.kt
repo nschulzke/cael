@@ -2,56 +2,146 @@ package parser
 
 import java.io.InputStream
 
-sealed class Token {
-    data object Dec : Token()
-    data object End : Token()
-    data object Extension : Token()
-    data object For : Token()
-    data object Is : Token()
-    data object Let : Token()
-    data object Match : Token()
-    data object Module : Token()
-    data object Open : Token()
-    data object Protocol : Token()
-    data object Struct : Token()
-    data object Type : Token()
+sealed interface Token {
+    val lexeme: String
 
-    data object LBrace : Token()
-    data object RBrace : Token()
-    data object LParen : Token()
-    data object RParen : Token()
-    data object LBracket : Token()
-    data object RBracket : Token()
+    data object Dec : Token {
+        override val lexeme = "dec"
+    }
+    data object End : Token {
+        override val lexeme = "end"
+    }
+    data object Extension : Token {
+        override val lexeme = "extension"
+    }
+    data object For : Token {
+        override val lexeme = "for"
+    }
+    data object Is : Token {
+        override val lexeme = "is"
+    }
+    data object Let : Token {
+        override val lexeme = "let"
+    }
+    data object Match : Token {
+        override val lexeme = "match"
+    }
+    data object Module : Token {
+        override val lexeme = "module"
+    }
+    data object Open : Token {
+        override val lexeme = "open"
+    }
+    data object Protocol : Token {
+        override val lexeme = "protocol"
+    }
+    data object Struct : Token {
+        override val lexeme = "struct"
+    }
+    data object Type : Token {
+        override val lexeme = "type"
+    }
 
-    data object Comma : Token()
-    data object Colon : Token()
-    data object Dot: Token()
-    data object Question : Token()
-    data object Plus : Token()
-    data object Minus : Token()
-    data object Times : Token()
-    data object Div : Token()
-    data object Mod : Token()
+    data object LBrace : Token {
+        override val lexeme = "{"
+    }
+    data object RBrace : Token {
+        override val lexeme = "}"
+    }
+    data object LParen : Token {
+        override val lexeme = "("
+    }
+    data object RParen : Token {
+        override val lexeme = ")"
+    }
+    data object LBracket : Token {
+        override val lexeme = "["
+    }
+    data object RBracket : Token {
+        override val lexeme = "]"
+    }
 
-    data object Bang : Token()
-    data object BangEq : Token()
-    data object Lt : Token()
-    data object LtEq : Token()
-    data object Gt : Token()
-    data object GtEq : Token()
-    data object Eq : Token()
-    data object EqEq : Token()
-    data object Arrow : Token()
+    data object Comma : Token {
+        override val lexeme = ","
+    }
+    data object Colon : Token {
+        override val lexeme = ":"
+    }
+    data object Dot: Token {
+        override val lexeme = "."
+    }
+    data object Question : Token {
+        override val lexeme = "?"
+    }
+    data object Plus : Token {
+        override val lexeme = "+"
+    }
+    data object Minus : Token {
+        override val lexeme = "-"
+    }
+    data object Times : Token {
+        override val lexeme = "*"
+    }
+    data object Div : Token {
+        override val lexeme = "/"
+    }
+    data object Mod : Token {
+        override val lexeme = "%"
+    }
 
-    data object Amp : Token()
-    data object AmpAmp : Token()
-    data object Pipe : Token()
-    data object PipePipe : Token()
+    data object Bang : Token {
+        override val lexeme = "!"
+    }
+    data object BangEq : Token {
+        override val lexeme = "!="
+    }
+    data object Lt : Token {
+        override val lexeme = "<"
+    }
+    data object LtEq : Token {
+        override val lexeme = "<="
+    }
+    data object Gt : Token {
+        override val lexeme = ">"
+    }
+    data object GtEq : Token {
+        override val lexeme = ">="
+    }
+    data object Eq : Token {
+        override val lexeme = "="
+    }
+    data object EqEq : Token {
+        override val lexeme = "=="
+    }
+    data object Arrow : Token {
+        override val lexeme = "=>"
+    }
 
-    data class IntLiteral(val value: Int) : Token()
-    data class FloatLiteral(val value: Double) : Token()
-    data class StringLiteral(val value: String) : Token()
-    data class Identifier(val name: String) : Token()
+    data object Amp : Token {
+        override val lexeme = "&"
+    }
+    data object AmpAmp : Token {
+        override val lexeme = "&&"
+    }
+    data object Pipe : Token {
+        override val lexeme = "|"
+    }
+    data object PipePipe : Token {
+        override val lexeme = "||"
+    }
+
+    data class IntLiteral(val value: Int) : Token {
+        override val lexeme = value.toString()
+    }
+    data class FloatLiteral(val value: Double) : Token {
+        override val lexeme = value.toString()
+    }
+    data class StringLiteral(val value: String) : Token {
+        override val lexeme = "\"$value\""
+    }
+    data class Identifier(val name: String) : Token {
+        override val lexeme = name
+    }
 }
 
 private val keywords = mapOf(

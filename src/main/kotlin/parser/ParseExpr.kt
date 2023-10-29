@@ -16,12 +16,12 @@ private object ExprPrecedence {
 
 val binary: PeekableIterator<Token>.(left: Expr, token: Token) -> Expr = { left, token ->
     val right = parseExpr()
-    Expr.Binary(left, tokenToBinaryOp(token), right)
+    Expr.Binary(left, token.lexeme, right)
 }
 
 val unary: PeekableIterator<Token>.(token: Token) -> Expr = { token ->
     val expr = parseExpr()
-    Expr.Unary(tokenToUnaryOp(token), expr)
+    Expr.Unary(token.lexeme, expr)
 }
 
 private val prattParser = Pratt(
@@ -135,34 +135,6 @@ private val prattParser = Pratt(
         },
     )
 )
-
-fun tokenToBinaryOp(token: Token): Expr.Binary.Op {
-    return when (token) {
-        is Token.Plus -> Expr.Binary.Op.Plus
-        is Token.Minus -> Expr.Binary.Op.Minus
-        is Token.Times -> Expr.Binary.Op.Times
-        is Token.Div -> Expr.Binary.Op.Div
-        is Token.Mod -> Expr.Binary.Op.Mod
-        is Token.EqEq -> Expr.Binary.Op.Equals
-        is Token.BangEq -> Expr.Binary.Op.NotEqual
-        is Token.Lt -> Expr.Binary.Op.LessThan
-        is Token.LtEq -> Expr.Binary.Op.LessThanOrEqual
-        is Token.Gt -> Expr.Binary.Op.GreaterThan
-        is Token.GtEq -> Expr.Binary.Op.GreaterThanOrEqual
-        is Token.AmpAmp -> Expr.Binary.Op.And
-        is Token.PipePipe -> Expr.Binary.Op.Or
-        else -> throw Exception("Expected binary operator, got $token")
-    }
-}
-
-fun tokenToUnaryOp(token: Token): Expr.Unary.Op {
-    return when (token) {
-        is Token.Plus -> Expr.Unary.Op.Plus
-        is Token.Minus -> Expr.Unary.Op.Minus
-        is Token.Bang -> Expr.Unary.Op.Not
-        else -> throw Exception("Expected unary operator, got $token")
-    }
-}
 
 fun PeekableIterator<Token>.parseExpr(): Expr {
     return with(prattParser) {
