@@ -137,21 +137,21 @@ sealed interface Expr : Node {
     ) : Expr
 
     @Serializable
-    sealed interface Literal {
+    sealed interface Literal : Expr {
         @Serializable
         data class Int(
             val value: kotlin.Int
-        ) : Expr
+        ) : Literal
 
         @Serializable
         data class Float(
             val value: Double
-        ) : Expr
+        ) : Literal
 
         @Serializable
         data class String(
             val value: kotlin.String
-        ) : Expr
+        ) : Literal
     }
 
     @Serializable
@@ -195,39 +195,15 @@ sealed interface Expr : Node {
     @Serializable
     data class Binary(
         val left: Expr,
-        val op: Op,
+        val op: String,
         val right: Expr
-    ) : Expr {
-        @Serializable
-        enum class Op {
-            Plus,
-            Minus,
-            Times,
-            Div,
-            Mod,
-            Equals,
-            NotEqual,
-            LessThan,
-            LessThanOrEqual,
-            GreaterThan,
-            GreaterThanOrEqual,
-            And,
-            Or,
-        }
-    }
+    ) : Expr
 
     @Serializable
     data class Unary(
-        val op: Op,
+        val op: String,
         val operand: Expr
-    ) : Expr {
-        @Serializable
-        enum class Op {
-            Plus,
-            Minus,
-            Not,
-        }
-    }
+    ) : Expr
 
     @Serializable
     data class Match(
