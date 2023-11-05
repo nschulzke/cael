@@ -10,9 +10,9 @@ private object TypePrecedence {
 private val prattParser = Pratt(
     prefixes = mapOf(
         Token.Identifier::class to Pratt.Prefix { token ->
-            Type.Identifier((token as Token.Identifier).name)
+            Type.Identifier((token as Token.Identifier).name, token.range)
         },
-        Token.LParen::class to Pratt.Prefix {
+        Token.LParen::class to Pratt.Prefix { lparen ->
             val type = parseType()
             expect<Token.RParen>()
             type
@@ -26,7 +26,7 @@ private val prattParser = Pratt(
             precedence = TypePrecedence.union,
         ) { left, _ ->
             val right = parseType()
-            Type.Union(left, right)
+            Type.Union(left, right, left.range..right.range)
         },
     )
 )

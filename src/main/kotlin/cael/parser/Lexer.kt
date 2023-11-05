@@ -1,286 +1,285 @@
 package cael.parser
 
+import cael.ast.Coords
+import cael.ast.Range
 import java.io.InputStream
 
-data class Coords(
-    val filename: String,
-    val line: Int,
-    val col: Int,
-)
+operator fun Token.rangeTo(other: Token) = this.range..other.range
 
 sealed interface Token {
+    val range: Range
     val lexeme: String
 
     data class Dec(
-        val coords: Coords
+        override val range: Range
     ) : Token {
         override val lexeme = "dec"
     }
 
     data class End(
-        val coords: Coords
+        override val range: Range
     ) : Token {
         override val lexeme = "end"
     }
 
     data class Extension(
-        val coords: Coords
+        override val range: Range
     ) : Token {
         override val lexeme = "extension"
     }
 
     data class For(
-        val coords: Coords
+        override val range: Range
     ) : Token {
         override val lexeme = "for"
     }
 
     data class Is(
-        val coords: Coords
+        override val range: Range
     ) : Token {
         override val lexeme = "is"
     }
 
     data class Let(
-        val coords: Coords
+        override val range: Range
     ) : Token {
         override val lexeme = "let"
     }
 
     data class Match(
-        val coords: Coords
+        override val range: Range
     ) : Token {
         override val lexeme = "match"
     }
 
     data class Module(
-        val coords: Coords
+        override val range: Range
     ) : Token {
         override val lexeme = "module"
     }
 
     data class Open(
-        val coords: Coords
+        override val range: Range
     ) : Token {
         override val lexeme = "open"
     }
 
     data class Protocol(
-        val coords: Coords
+        override val range: Range
     ) : Token {
         override val lexeme = "protocol"
     }
 
     data class Struct(
-        val coords: Coords
+        override val range: Range
     ) : Token {
         override val lexeme = "struct"
     }
 
     data class Type(
-        val coords: Coords
+        override val range: Range
     ) : Token {
         override val lexeme = "type"
     }
 
     data class LBrace(
-        val coords: Coords
+        override val range: Range
     ) : Token {
         override val lexeme = "{"
     }
 
     data class RBrace(
-        val coords: Coords
+        override val range: Range
     ) : Token {
         override val lexeme = "}"
     }
 
     data class LParen(
-        val coords: Coords
+        override val range: Range
     ) : Token {
         override val lexeme = "("
     }
 
     data class RParen(
-        val coords: Coords
+        override val range: Range
     ) : Token {
         override val lexeme = ")"
     }
 
     data class LBracket(
-        val coords: Coords
+        override val range: Range
     ) : Token {
         override val lexeme = "["
     }
 
     data class RBracket(
-        val coords: Coords
+        override val range: Range
     ) : Token {
         override val lexeme = "]"
     }
 
     data class Comma(
-        val coords: Coords
+        override val range: Range
     ) : Token {
         override val lexeme = ","
     }
 
     data class Colon(
-        val coords: Coords
+        override val range: Range
     ) : Token {
         override val lexeme = ":"
     }
 
     data class Dot(
-        val coords: Coords
+        override val range: Range
     ) : Token {
         override val lexeme = "."
     }
 
     data class Question(
-        val coords: Coords
+        override val range: Range
     ) : Token {
         override val lexeme = "?"
     }
 
     data class Plus(
-        val coords: Coords
+        override val range: Range
     ) : Token {
         override val lexeme = "+"
     }
 
     data class Minus(
-        val coords: Coords
+        override val range: Range
     ) : Token {
         override val lexeme = "-"
     }
 
     data class Times(
-        val coords: Coords
+        override val range: Range
     ) : Token {
         override val lexeme = "*"
     }
 
     data class Div(
-        val coords: Coords
+        override val range: Range
     ) : Token {
         override val lexeme = "/"
     }
 
     data class Mod(
-        val coords: Coords
+        override val range: Range
     ) : Token {
         override val lexeme = "%"
     }
 
     data class Bang(
-        val coords: Coords
+        override val range: Range
     ) : Token {
         override val lexeme = "!"
     }
 
     data class BangEq(
-        val coords: Coords
+        override val range: Range
     ) : Token {
         override val lexeme = "!="
     }
 
     data class Lt(
-        val coords: Coords
+        override val range: Range
     ) : Token {
         override val lexeme = "<"
     }
 
     data class LtEq(
-        val coords: Coords
+        override val range: Range
     ) : Token {
         override val lexeme = "<="
     }
 
     data class Gt(
-        val coords: Coords
+        override val range: Range
     ) : Token {
         override val lexeme = ">"
     }
 
     data class GtEq(
-        val coords: Coords
+        override val range: Range
     ) : Token {
         override val lexeme = ">="
     }
 
     data class Eq(
-        val coords: Coords
+        override val range: Range
     ) : Token {
         override val lexeme = "="
     }
 
     data class EqEq(
-        val coords: Coords
+        override val range: Range
     ) : Token {
         override val lexeme = "=="
     }
 
     data class Arrow(
-        val coords: Coords
+        override val range: Range
     ) : Token {
         override val lexeme = "=>"
     }
 
     data class Amp(
-        val coords: Coords
+        override val range: Range
     ) : Token {
         override val lexeme = "&"
     }
 
     data class AmpAmp(
-        val coords: Coords
+        override val range: Range
     ) : Token {
         override val lexeme = "&&"
     }
 
     data class Pipe(
-        val coords: Coords
+        override val range: Range
     ) : Token {
         override val lexeme = "|"
     }
 
     data class PipePipe(
-        val coords: Coords
+        override val range: Range
     ) : Token {
         override val lexeme = "||"
     }
 
     data class IntLiteral(
         val value: Int,
-        val coords: Coords,
+        override val range: Range,
     ) : Token {
         override val lexeme = value.toString()
     }
 
     data class FloatLiteral(
         val value: Double,
-        val coords: Coords,
+        override val range: Range,
     ) : Token {
         override val lexeme = value.toString()
     }
 
     data class StringLiteral(
         val value: String,
-        val coords: Coords,
+        override val range: Range,
     ) : Token {
         override val lexeme = "\"$value\""
     }
 
     data class Identifier(
         val name: String,
-        val coords: Coords,
+        override val range: Range,
     ) : Token {
         override val lexeme = name
     }
 }
 
-private val keywords = mapOf<String, (Coords) -> Token>(
+private val keywords = mapOf<String, (Range) -> Token>(
     "dec" to { Token.Dec(it) },
     "end" to { Token.End(it) },
     "extension" to { Token.Extension(it) },
@@ -304,15 +303,25 @@ fun InputStream.lex(): Sequence<Token> =
 fun String.lex(): Sequence<Token> =
     this.asSequence().lex()
 
-class CoordinateIterator(
+class CharIterator(
     val filename: String,
     iterator: Iterator<Char>,
 ) : PeekableIterator<Char>(iterator) {
-    var line: Int = 1
+    var line: Int = 0
         private set
 
-    var col: Int = 1
+    var col: Int = 0
         private set
+
+    private var startCoords = coords()
+    
+    fun coords() = Coords(filename, line, col)
+    
+    fun markStart() {
+        startCoords = coords()
+    }
+
+    fun range() = startCoords..coords()
 
     override val onNext: ((Char?) -> Unit) = {
         if (it == '\n') {
@@ -325,7 +334,7 @@ class CoordinateIterator(
 }
 
 fun Sequence<Char>.lex(): Sequence<Token> {
-    val iterator = CoordinateIterator("file", this.iterator())
+    val iterator = CharIterator("file", iterator())
     return sequence {
         with(iterator) {
             while (iterator.hasNext()) {
@@ -334,70 +343,76 @@ fun Sequence<Char>.lex(): Sequence<Token> {
                         // Skip whitespace
                     }
 
-                    '{' -> yield(Token.LBrace(Coords(filename, line, col)))
-                    '}' -> yield(Token.RBrace(Coords(filename, line, col)))
-                    '(' -> yield(Token.LParen(Coords(filename, line, col)))
-                    ')' -> yield(Token.RParen(Coords(filename, line, col)))
-                    '[' -> yield(Token.LBracket(Coords(filename, line, col)))
-                    ']' -> yield(Token.RBracket(Coords(filename, line, col)))
+                    '{' -> yield(Token.LBrace(coords()..coords()))
+                    '}' -> yield(Token.RBrace(coords()..coords()))
+                    '(' -> yield(Token.LParen(coords()..coords()))
+                    ')' -> yield(Token.RParen(coords()..coords()))
+                    '[' -> yield(Token.LBracket(coords()..coords()))
+                    ']' -> yield(Token.RBracket(coords()..coords()))
 
-                    ',' -> yield(Token.Comma(Coords(filename, line, col)))
-                    ':' -> yield(Token.Colon(Coords(filename, line, col)))
-                    '.' -> yield(Token.Dot(Coords(filename, line, col)))
-                    '?' -> yield(Token.Question(Coords(filename, line, col)))
-                    '+' -> yield(Token.Plus(Coords(filename, line, col)))
-                    '-' -> yield(Token.Minus(Coords(filename, line, col)))
-                    '*' -> yield(Token.Times(Coords(filename, line, col)))
-                    '/' -> yield(Token.Div(Coords(filename, line, col)))
-                    '%' -> yield(Token.Mod(Coords(filename, line, col)))
+                    ',' -> yield(Token.Comma(coords()..coords()))
+                    ':' -> yield(Token.Colon(coords()..coords()))
+                    '.' -> yield(Token.Dot(coords()..coords()))
+                    '?' -> yield(Token.Question(coords()..coords()))
+                    '+' -> yield(Token.Plus(coords()..coords()))
+                    '-' -> yield(Token.Minus(coords()..coords()))
+                    '*' -> yield(Token.Times(coords()..coords()))
+                    '/' -> yield(Token.Div(coords()..coords()))
+                    '%' -> yield(Token.Mod(coords()..coords()))
 
                     '=' -> {
+                        markStart()
                         if (iterator.hasNext() && iterator.match('>')) {
-                            yield(Token.Arrow(Coords(filename, line, col)))
+                            yield(Token.Arrow(range()))
                         } else if (iterator.hasNext() && iterator.match('=')) {
-                            yield(Token.EqEq(Coords(filename, line, col)))
+                            yield(Token.EqEq(range()))
                         } else {
-                            yield(Token.Eq(Coords(filename, line, col)))
+                            yield(Token.Eq(range()))
                         }
                     }
 
                     '!' -> {
+                        markStart()
                         if (iterator.hasNext() && iterator.match('=')) {
-                            yield(Token.BangEq(Coords(filename, line, col)))
+                            yield(Token.BangEq(range()))
                         } else {
-                            yield(Token.Bang(Coords(filename, line, col)))
+                            yield(Token.Bang(range()))
                         }
                     }
 
                     '<' -> {
+                        markStart()
                         if (iterator.hasNext() && iterator.match('=')) {
-                            yield(Token.LtEq(Coords(filename, line, col)))
+                            yield(Token.LtEq(range()))
                         } else {
-                            yield(Token.Lt(Coords(filename, line, col)))
+                            yield(Token.Lt(range()))
                         }
                     }
 
                     '>' -> {
+                        markStart()
                         if (iterator.hasNext() && iterator.match('=')) {
-                            yield(Token.GtEq(Coords(filename, line, col)))
+                            yield(Token.GtEq(range()))
                         } else {
-                            yield(Token.Gt(Coords(filename, line, col)))
+                            yield(Token.Gt(range()))
                         }
                     }
 
                     '&' -> {
+                        markStart()
                         if (iterator.hasNext() && iterator.match('&')) {
-                            yield(Token.AmpAmp(Coords(filename, line, col)))
+                            yield(Token.AmpAmp(range()))
                         } else {
-                            yield(Token.Amp(Coords(filename, line, col)))
+                            yield(Token.Amp(range()))
                         }
                     }
 
                     '|' -> {
+                        markStart()
                         if (iterator.hasNext() && iterator.match('|')) {
-                            yield(Token.PipePipe(Coords(filename, line, col)))
+                            yield(Token.PipePipe(range()))
                         } else {
-                            yield(Token.Pipe(Coords(filename, line, col)))
+                            yield(Token.Pipe(range()))
                         }
                     }
 
@@ -434,12 +449,13 @@ fun Sequence<Char>.lex(): Sequence<Token> {
     }
 }
 
-private fun CoordinateIterator.lexString(closingChar: Char): Token {
+private fun CharIterator.lexString(closingChar: Char): Token {
+    markStart()
     val builder = StringBuilder()
     while (hasNext()) {
         val c = next()
         if (c == closingChar) {
-            return Token.StringLiteral(builder.toString(), Coords(filename, line, col))
+            return Token.StringLiteral(builder.toString(), range())
         } else {
             builder.append(c)
         }
@@ -447,7 +463,8 @@ private fun CoordinateIterator.lexString(closingChar: Char): Token {
     throw Exception("Unterminated string literal")
 }
 
-private fun CoordinateIterator.lexNumber(firstChar: Char): Token {
+private fun CharIterator.lexNumber(firstChar: Char): Token {
+    markStart()
     val builder = StringBuilder()
     builder.append(firstChar)
     while (hasNext()) {
@@ -464,15 +481,16 @@ private fun CoordinateIterator.lexNumber(firstChar: Char): Token {
                     break
                 }
             }
-            return Token.FloatLiteral(builder.toString().toDouble(), Coords(filename, line, col))
+            return Token.FloatLiteral(builder.toString().toDouble(), range())
         } else {
             break
         }
     }
-    return Token.IntLiteral(builder.toString().toInt(), Coords(filename, line, col))
+    return Token.IntLiteral(builder.toString().toInt(), range())
 }
 
-private fun CoordinateIterator.lexIdentifier(firstChar: Char): Token {
+private fun CharIterator.lexIdentifier(firstChar: Char): Token {
+    markStart()
     val builder = StringBuilder()
     builder.append(firstChar)
     while (hasNext()) {
@@ -485,9 +503,9 @@ private fun CoordinateIterator.lexIdentifier(firstChar: Char): Token {
     }
     val name = builder.toString()
     return if (name in keywords) {
-        keywords[name]!!.invoke(Coords(filename, line, col))
+        keywords[name]!!.invoke(range())
     } else {
-        Token.Identifier(name, Coords(filename, line, col))
+        Token.Identifier(name, range())
     }
 }
 

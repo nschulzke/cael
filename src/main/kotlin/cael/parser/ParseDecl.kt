@@ -17,41 +17,41 @@ fun PeekableIterator<Token>.parseDecl(): Decl {
 }
 
 private fun PeekableIterator<Token>.parseModuleDecl(): Decl.Module {
-    expect<Token.Module>()
-    val name = parseIdentifier()
+    val start = expect<Token.Module>()
+    val (name) = parseIdentifier()
     expect<Token.Is>()
     val members = mutableListOf<Decl>()
     while (peek() !is Token.End) {
         members.add(parseDecl())
     }
-    expect<Token.End>()
-    return Decl.Module(name, members)
+    val end = expect<Token.End>()
+    return Decl.Module(name, members, start..end)
 }
 
 private fun PeekableIterator<Token>.parseOpenDecl(): Decl.Open {
-    expect<Token.Open>()
-    val name = parseIdentifier()
-    return Decl.Open(name)
+    val start = expect<Token.Open>()
+    val identifier = parseIdentifier()
+    return Decl.Open(identifier.name, start..identifier)
 }
 
 private fun PeekableIterator<Token>.parseTypeDecl(): Decl.TypeAlias {
-    expect<Token.Type>()
-    val name = parseIdentifier()
+    val start = expect<Token.Type>()
+    val (name) = parseIdentifier()
     expect<Token.Eq>()
     val body = parseType()
-    return Decl.TypeAlias(name, body)
+    return Decl.TypeAlias(name, body, start.range..body.range)
 }
 
 private fun PeekableIterator<Token>.parseProtocolDecl(): Decl.Protocol {
-    expect<Token.Protocol>()
-    val name = parseIdentifier()
+    val start = expect<Token.Protocol>()
+    val (name) = parseIdentifier()
     expect<Token.Is>()
     val declarations = mutableListOf<Decl.Protocol.Declaration>()
     while (peek() !is Token.End) {
         declarations.add(parseProtocolMember())
     }
-    expect<Token.End>()
-    return Decl.Protocol(name, declarations)
+    val end = expect<Token.End>()
+    return Decl.Protocol(name, declarations, start..end)
 }
 
 private fun PeekableIterator<Token>.parseProtocolMember(): Decl.Protocol.Declaration {
@@ -62,8 +62,8 @@ private fun PeekableIterator<Token>.parseProtocolMember(): Decl.Protocol.Declara
 }
 
 private fun PeekableIterator<Token>.parseExtensionDecl(): Decl.Extension {
-    expect<Token.Extension>()
-    val typeName = parseIdentifier()
+    val start = expect<Token.Extension>()
+    val (typeName) = parseIdentifier()
     val protocolName = if (match<Token.Colon>()) {
         parseIdentifier()
     } else {
@@ -74,8 +74,8 @@ private fun PeekableIterator<Token>.parseExtensionDecl(): Decl.Extension {
     while (peek() !is Token.End) {
         declarations.add(parseExtensionMember())
     }
-    expect<Token.End>()
-    return Decl.Extension(typeName, protocolName, declarations)
+    val end = expect<Token.End>()
+    return Decl.Extension(typeName, protocolName?.name, declarations, start..end)
 }
 
 private fun PeekableIterator<Token>.parseExtensionMember(): Decl.Extension.Declaration {
@@ -87,16 +87,16 @@ private fun PeekableIterator<Token>.parseExtensionMember(): Decl.Extension.Decla
 }
 
 private fun PeekableIterator<Token>.parseStructDecl(): Decl.Struct {
-    expect<Token.Struct>()
-    val name = parseIdentifier()
+    val start = expect<Token.Struct>()
+    val identifier = parseIdentifier()
     return when (peekOrNull()) {
-        is Token.LParen -> parseTupleStructPartial(name)
-        is Token.LBrace -> parseRecordStructPartial(name)
-        else -> Decl.Struct.Bare(name)
+        is Token.LParen -> parseTupleStructPartial(start, identifier.name)
+        is Token.LBrace -> parseRecordStructPartial(start, identifier.name)
+        else -> Decl.Struct.Bare(identifier.name, start..identifier)
     }
 }
 
-private fun PeekableIterator<Token>.parseTupleStructPartial(name: String): Decl.Struct.Tuple {
+private fun PeekableIterator<Token>.parseTupleStructPartial(start: Token.Struct, name: String): Decl.Struct.Tuple {
     expect<Token.LParen>()
     val components = mutableListOf<Type>()
     if (peek() !is Token.RParen) {
@@ -106,11 +106,11 @@ private fun PeekableIterator<Token>.parseTupleStructPartial(name: String): Decl.
             components.add(parseType())
         }
     }
-    expect<Token.RParen>()
-    return Decl.Struct.Tuple(name, components)
+    val end = expect<Token.RParen>()
+    return Decl.Struct.Tuple(name, components, start..end)
 }
 
-private fun PeekableIterator<Token>.parseRecordStructPartial(name: String): Decl.Struct.Record {
+private fun PeekableIterator<Token>.parseRecordStructPartial(start: Token.Struct, name: String): Decl.Struct.Record {
     expect<Token.LBrace>()
     val components = mutableListOf<TypeRecordItem>()
     if (peek() !is Token.RBrace) {
@@ -120,21 +120,21 @@ private fun PeekableIterator<Token>.parseRecordStructPartial(name: String): Decl
             components.add(parseTypeRecordItem())
         }
     }
-    expect<Token.RBrace>()
-    return Decl.Struct.Record(name, components)
+    val end = expect<Token.RBrace>()
+    return Decl.Struct.Record(name, components, start..end)
 }
 
 private fun PeekableIterator<Token>.parseDecDecl(): Decl.Dec {
-    expect<Token.Dec>()
-    val name = parseIdentifier()
+    val start = expect<Token.Dec>()
+    val (name) = parseIdentifier()
     return when (peekOrNull()) {
-        is Token.LParen -> parseTupleDecPartial(name)
-        is Token.LBrace -> parseRecordDecPartial(name)
-        else -> parseBareDecPartial(name)
+        is Token.LParen -> parseTupleDecPartial(start, name)
+        is Token.LBrace -> parseRecordDecPartial(start, name)
+        else -> parseBareDecPartial(start, name)
     }
 }
 
-private fun PeekableIterator<Token>.parseTupleDecPartial(name: String): Decl.Dec.Tuple {
+private fun PeekableIterator<Token>.parseTupleDecPartial(start: Token.Dec, name: String): Decl.Dec.Tuple {
     expect<Token.LParen>()
     val components = mutableListOf<Type>()
     if (peek() !is Token.RParen) {
@@ -147,10 +147,10 @@ private fun PeekableIterator<Token>.parseTupleDecPartial(name: String): Decl.Dec
     expect<Token.RParen>()
     expect<Token.Colon>()
     val type = parseType()
-    return Decl.Dec.Tuple(name, components, type)
+    return Decl.Dec.Tuple(name, components, type, start.range..type.range)
 }
 
-private fun PeekableIterator<Token>.parseRecordDecPartial(name: String): Decl.Dec.Record {
+private fun PeekableIterator<Token>.parseRecordDecPartial(start: Token.Dec, name: String): Decl.Dec.Record {
     expect<Token.LBrace>()
     val components = mutableListOf<TypeRecordItem>()
     if (peek() !is Token.RBrace) {
@@ -163,26 +163,26 @@ private fun PeekableIterator<Token>.parseRecordDecPartial(name: String): Decl.De
     expect<Token.RBrace>()
     expect<Token.Colon>()
     val type = parseType()
-    return Decl.Dec.Record(name, components, type)
+    return Decl.Dec.Record(name, components, type, start.range..type.range)
 }
 
-private fun PeekableIterator<Token>.parseBareDecPartial(name: String): Decl.Dec.Bare {
+private fun PeekableIterator<Token>.parseBareDecPartial(start: Token.Dec, name: String): Decl.Dec.Bare {
     expect<Token.Colon>()
     val type = parseType()
-    return Decl.Dec.Bare(name, type)
+    return Decl.Dec.Bare(name, type, start.range..type.range)
 }
 
 private fun PeekableIterator<Token>.parseLetDecl(): Decl.Let {
-    expect<Token.Let>()
-    val name = parseIdentifier()
+    val start = expect<Token.Let>()
+    val (name) = parseIdentifier()
     return when (peekOrNull()) {
-        is Token.LParen -> parseTupleLetPartial(name)
-        is Token.LBrace -> parseRecordLetPartial(name)
-        else -> parseBareLetPartial(name)
+        is Token.LParen -> parseTupleLetPartial(start, name)
+        is Token.LBrace -> parseRecordLetPartial(start, name)
+        else -> parseBareLetPartial(start, name)
     }
 }
 
-private fun PeekableIterator<Token>.parseTupleLetPartial(name: String): Decl.Let.Tuple {
+private fun PeekableIterator<Token>.parseTupleLetPartial(start: Token.Let, name: String): Decl.Let.Tuple {
     expect<Token.LParen>()
     val components = mutableListOf<Pattern>()
     if (peek() !is Token.RParen) {
@@ -195,10 +195,10 @@ private fun PeekableIterator<Token>.parseTupleLetPartial(name: String): Decl.Let
     expect<Token.RParen>()
     expect<Token.Eq>()
     val value = parseExpr()
-    return Decl.Let.Tuple(name, components, value)
+    return Decl.Let.Tuple(name, components, value, start.range..value.range)
 }
 
-private fun PeekableIterator<Token>.parseRecordLetPartial(name: String): Decl.Let.Record {
+private fun PeekableIterator<Token>.parseRecordLetPartial(start: Token.Let, name: String): Decl.Let.Record {
     expect<Token.LBrace>()
     val components = mutableListOf<PatternRecordItem>()
     if (peek() !is Token.RBrace) {
@@ -211,11 +211,11 @@ private fun PeekableIterator<Token>.parseRecordLetPartial(name: String): Decl.Le
     expect<Token.RBrace>()
     expect<Token.Eq>()
     val value = parseExpr()
-    return Decl.Let.Record(name, components, value)
+    return Decl.Let.Record(name, components, value, start.range..value.range)
 }
 
-private fun PeekableIterator<Token>.parseBareLetPartial(name: String): Decl.Let.Bare {
+private fun PeekableIterator<Token>.parseBareLetPartial(start: Token.Let, name: String): Decl.Let.Bare {
     expect<Token.Eq>()
     val value = parseExpr()
-    return Decl.Let.Bare(name, value)
+    return Decl.Let.Bare(name, value, start.range..value.range)
 }

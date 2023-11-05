@@ -7,9 +7,9 @@ import cael.ast.PatternRecordItem
 fun PeekableIterator<Token>.parsePattern(): Pattern {
     return when (val token = next()) {
         is Token.Identifier -> parsePatternAfterIdentifier(token)
-        is Token.IntLiteral -> Pattern.Literal.Int(token.value)
-        is Token.FloatLiteral -> Pattern.Literal.Float(token.value)
-        is Token.StringLiteral -> Pattern.Literal.String(token.value)
+        is Token.IntLiteral -> Pattern.Literal.Int(token.value, token.range)
+        is Token.FloatLiteral -> Pattern.Literal.Float(token.value, token.range)
+        is Token.StringLiteral -> Pattern.Literal.String(token.value, token.range)
         else -> throw Exception("Expected pattern, got $token")
     }
 }
@@ -18,11 +18,11 @@ private fun PeekableIterator<Token>.parsePatternAfterIdentifier(token: Token.Ide
     return when (peekOrNull()) {
         is Token.LParen -> parseTupleStructPatternPartial(token)
         is Token.LBrace -> parseRecordStructPatternPartial(token)
-        else -> Pattern.Identifier(token.name)
+        else -> Pattern.Identifier(token.name, token.range)
     }
 }
 
-private fun PeekableIterator<Token>.parseTupleStructPatternPartial(token: Token.Identifier): Pattern {
+private fun PeekableIterator<Token>.parseTupleStructPatternPartial(identifier: Token.Identifier): Pattern {
     expect<Token.LParen>()
     val components = mutableListOf<Pattern>()
     if (peek() !is Token.RParen) {
@@ -32,11 +32,11 @@ private fun PeekableIterator<Token>.parseTupleStructPatternPartial(token: Token.
             components.add(parsePattern())
         }
     }
-    expect<Token.RParen>()
-    return Pattern.Struct.Tuple(token.name, components)
+    val end = expect<Token.RParen>()
+    return Pattern.Struct.Tuple(identifier.name, components, identifier.range..end.range)
 }
 
-private fun PeekableIterator<Token>.parseRecordStructPatternPartial(token: Token.Identifier): Pattern {
+private fun PeekableIterator<Token>.parseRecordStructPatternPartial(identifier: Token.Identifier): Pattern {
     expect<Token.LBrace>()
     val components = mutableListOf<PatternRecordItem>()
     if (peek() !is Token.RBrace) {
@@ -46,6 +46,6 @@ private fun PeekableIterator<Token>.parseRecordStructPatternPartial(token: Token
             components.add(parsePatternRecordItem())
         }
     }
-    expect<Token.RBrace>()
-    return Pattern.Struct.Record(token.name, components)
+    val end = expect<Token.RBrace>()
+    return Pattern.Struct.Record(identifier.name, components, identifier.range..end.range)
 }
