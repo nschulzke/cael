@@ -102,14 +102,14 @@ sealed interface Decl : Node {
         @Serializable
         data class Tuple(
             val name: String,
-            val components: List<Pattern>,
+            val parameters: List<Pattern>,
             val value: Expr
         ) : Let
 
         @Serializable
         data class Record(
             val name: String,
-            val components: List<PatternRecordItem>,
+            val parameters: List<PatternRecordItem>,
             val value: Expr
         ) : Let
     }

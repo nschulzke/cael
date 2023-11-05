@@ -1,20 +1,16 @@
+import cael.compiler.toPython
 import cael.parser.lex
 import cael.parser.parse
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
+import python.writeTo
 import java.io.File
 
 fun main(args: Array<String>) {
     val path = if (args.isEmpty()) {
-        "examples/type.cl"
+        "examples/python.cl"
     } else {
         args[0]
     }
     val file = File(path)
     val program = file.readText().lex().parse()
-    val json = Json {
-        prettyPrint = true
-        classDiscriminator = "nodeType"
-    }
-    println(json.encodeToString(program))
+    program.toPython().writeTo(File("./runtime/example.py").writer(Charsets.UTF_8))
 }

@@ -37,8 +37,8 @@ let barObj = Bar("test")
 let bazObj = Baz { property = Bar("bazTest") }
 
 
-dec something(Quz) : String | Nothing # Can be inferred
-let something(Foo) = Nothing
+dec something(Quz) : String | None # Can be inferred
+let something(Foo) = None
 let something(Bar(string)) = string
 let something(Baz { property = Bar(string) }) = string
 
