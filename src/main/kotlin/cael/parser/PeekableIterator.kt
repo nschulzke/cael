@@ -1,12 +1,14 @@
 package cael.parser
 
-class PeekableIterator<T>(private val iterator: Iterator<T>) : Iterator<T> {
+open class PeekableIterator<T>(
+    private val iterator: Iterator<T>,
+) : Iterator<T> {
     private var peek: T? = if (iterator.hasNext()) iterator.next() else null
 
+    protected open val onNext: ((T?) -> Unit)? = null
+
     override fun next(): T {
-        val result = peek
-        peek = if (iterator.hasNext()) iterator.next() else null
-        return result ?: throw NoSuchElementException()
+        return nextOrNull() ?: throw NoSuchElementException()
     }
 
     override fun hasNext(): Boolean {
@@ -15,6 +17,7 @@ class PeekableIterator<T>(private val iterator: Iterator<T>) : Iterator<T> {
 
     fun nextOrNull(): T? {
         return peek.also {
+            onNext?.invoke(it)
             peek = if (iterator.hasNext()) iterator.next() else null
         }
     }

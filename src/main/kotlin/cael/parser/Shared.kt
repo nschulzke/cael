@@ -6,21 +6,21 @@ import cael.ast.TypeRecordItem
 
 fun PeekableIterator<Token>.parseTypeRecordItem(): TypeRecordItem {
     val name = parseIdentifier()
-    expect(Token.Colon)
+    expect<Token.Colon>()
     val type = parseType()
     return TypeRecordItem(name, type)
 }
 
 fun PeekableIterator<Token>.parseExprRecordItem(): ExprRecordItem {
     val name = parseIdentifier()
-    expect(Token.Eq)
+    expect<Token.Eq>()
     val value = parseExpr()
     return ExprRecordItem(name, value)
 }
 
 fun PeekableIterator<Token>.parsePatternRecordItem(): PatternRecordItem {
     val name = parseIdentifier()
-    expect(Token.Eq)
+    expect<Token.Eq>()
     val pattern = parsePattern()
     return PatternRecordItem(name, pattern)
 }

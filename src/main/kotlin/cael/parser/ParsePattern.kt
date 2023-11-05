@@ -16,8 +16,8 @@ fun PeekableIterator<Token>.parsePattern(): Pattern {
 
 private fun PeekableIterator<Token>.parsePatternAfterIdentifier(token: Token.Identifier): Pattern {
     return when (peekOrNull()) {
-        Token.LParen -> parseTupleStructPatternPartial(token)
-        Token.LBrace -> parseRecordStructPatternPartial(token)
+        is Token.LParen -> parseTupleStructPatternPartial(token)
+        is Token.LBrace -> parseRecordStructPatternPartial(token)
         else -> Pattern.Identifier(token.name)
     }
 }
