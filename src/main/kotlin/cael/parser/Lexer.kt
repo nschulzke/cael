@@ -4,6 +4,9 @@ import cael.ast.Coords
 import cael.ast.Range
 import java.io.InputStream
 
+class LexerError(val description: String, val coords: Coords) :
+    Error("Lexing error at ${coords.filename}:${coords.line}:${coords.col} $description")
+
 operator fun Token.rangeTo(other: Token) = this.range..other.range
 
 sealed interface Token {
@@ -307,16 +310,16 @@ class CharIterator(
     val filename: String,
     iterator: Iterator<Char>,
 ) : PeekableIterator<Char>(iterator) {
-    var line: Int = 0
+    var line: Int = 1
         private set
 
     var col: Int = 0
         private set
 
     private var startCoords = coords()
-    
+
     fun coords() = Coords(filename, line, col)
-    
+
     fun markStart() {
         startCoords = coords()
     }
@@ -326,7 +329,7 @@ class CharIterator(
     override val onNext: ((Char?) -> Unit) = {
         if (it == '\n') {
             line++
-            col = 1
+            col = 0
         } else if (it != null) {
             col++
         }
@@ -440,7 +443,7 @@ fun Sequence<Char>.lex(): Sequence<Token> {
                             val parsed = lexIdentifier(c)
                             yield(parsed)
                         } else {
-                            throw Exception("Unexpected character: $c")
+                            throw LexerError("Unexpected character: $c", coords())
                         }
                     }
                 }
@@ -460,7 +463,7 @@ private fun CharIterator.lexString(closingChar: Char): Token {
             builder.append(c)
         }
     }
-    throw Exception("Unterminated string literal")
+    throw LexerError("Unterminated string literal", coords())
 }
 
 private fun CharIterator.lexNumber(firstChar: Char): Token {
