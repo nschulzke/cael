@@ -1,6 +1,6 @@
-package parser
+package cael.parser
 
-import ast.Node
+import cael.ast.Node
 import kotlin.reflect.KClassifier
 
 class Pratt<T : Node>(

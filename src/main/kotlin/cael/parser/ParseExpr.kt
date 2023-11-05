@@ -1,7 +1,7 @@
-package parser
+package cael.parser
 
-import ast.Expr
-import ast.ExprRecordItem
+import cael.ast.Expr
+import cael.ast.ExprRecordItem
 
 
 private object ExprPrecedence {

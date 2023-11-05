@@ -1,7 +1,7 @@
-package parser
+package cael.parser
 
-import ast.Pattern
-import ast.PatternRecordItem
+import cael.ast.Pattern
+import cael.ast.PatternRecordItem
 
 
 fun PeekableIterator<Token>.parsePattern(): Pattern {

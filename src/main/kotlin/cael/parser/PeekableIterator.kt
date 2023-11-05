@@ -1,4 +1,4 @@
-package parser
+package cael.parser
 
 class PeekableIterator<T>(private val iterator: Iterator<T>) : Iterator<T> {
     private var peek: T? = if (iterator.hasNext()) iterator.next() else null

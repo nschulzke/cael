@@ -1,6 +1,6 @@
-package parser
+package cael.parser
 
-import ast.*
+import cael.ast.*
 
 fun PeekableIterator<Token>.parseDecl(): Decl {
     return when (val token = peek()) {

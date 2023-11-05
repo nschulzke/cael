@@ -1,5 +1,5 @@
-import parser.lex
-import parser.parse
+import cael.parser.lex
+import cael.parser.parse
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.io.File

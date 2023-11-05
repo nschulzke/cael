@@ -1,6 +1,6 @@
-package parser
+package cael.parser
 
-import ast.Type
+import cael.ast.Type
 
 
 private object TypePrecedence {

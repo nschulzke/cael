@@ -1,8 +1,8 @@
-package parser
+package cael.parser
 
-import ast.ExprRecordItem
-import ast.PatternRecordItem
-import ast.TypeRecordItem
+import cael.ast.ExprRecordItem
+import cael.ast.PatternRecordItem
+import cael.ast.TypeRecordItem
 
 fun PeekableIterator<Token>.parseTypeRecordItem(): TypeRecordItem {
     val name = parseIdentifier()

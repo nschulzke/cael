@@ -1,7 +1,7 @@
-package parser
+package cael.parser
 
-import ast.Decl
-import ast.Program
+import cael.ast.Decl
+import cael.ast.Program
 
 fun Sequence<Token>.parse(): Program {
     val iterator = PeekableIterator(this.iterator())
