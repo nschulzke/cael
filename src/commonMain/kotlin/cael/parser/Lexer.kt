@@ -2,7 +2,9 @@ package cael.parser
 
 import cael.ast.Coords
 import cael.ast.Range
-import java.io.InputStream
+import cael.io.asSequenceUtf8
+import cael.io.toSource
+import okio.*
 
 class LexerError(val description: String, val coords: Coords) :
     Error("Lexing error at ${coords.filename}:${coords.line}:${coords.col} $description")
@@ -297,11 +299,11 @@ private val keywords = mapOf<String, (Range) -> Token>(
     "type" to { Token.Type(it) },
 )
 
-fun InputStream.lex(): Sequence<Token> =
-    this.bufferedReader()
-        .lineSequence()
-        .flatMap { it.asSequence() }
-        .lex()
+fun Path.lex(): Sequence<Token> =
+    this.toSource().lex()
+
+fun Source.lex(): Sequence<Token> =
+    this.asSequenceUtf8().lex()
 
 fun String.lex(): Sequence<Token> =
     this.asSequence().lex()
