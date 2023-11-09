@@ -47,6 +47,7 @@ kotlin {
                 implementation("com.squareup.okio:okio:3.6.0")
                 implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.1")
                 implementation("com.github.ajalt.clikt:clikt:4.2.1")
+                implementation("co.touchlab:kermit:2.0.2")
             }
         }
         val commonTest by getting

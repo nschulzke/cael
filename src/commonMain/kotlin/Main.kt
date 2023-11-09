@@ -1,6 +1,7 @@
 import cael.compiler.toPython
 import cael.parser.lex
 import cael.parser.parse
+import co.touchlab.kermit.Logger
 import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.parameters.arguments.argument
 import com.github.ajalt.clikt.parameters.options.option
@@ -12,10 +13,14 @@ class CaelC : CliktCommand() {
     val output by option("-o", "--output", help = "Path to the output file")
 
     override fun run() {
-        val program = input.toPath().lex().parse()
-        val python = program.toPython()
-        val output = output ?: input.replace(".cl", ".py")
-        output.toPath().write(python)
+        try {
+            val program = input.toPath().lex().parse()
+            val python = program.toPython()
+            val output = output ?: input.replace(".cl", ".py")
+            output.toPath().write(python)
+        } catch (throwable: Throwable) {
+            Logger.e(throwable) { "Failed to compile $input" }
+        }
     }
 }
 
