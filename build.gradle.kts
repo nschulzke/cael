@@ -32,6 +32,12 @@ kotlin {
         binaries {
             executable {
                 entryPoint = "main"
+                runTask?.run {
+                    val args = providers.gradleProperty("args")
+                    argumentProviders.add(CommandLineArgumentProvider {
+                        args.orNull?.split(' ') ?: emptyList()
+                    })
+                }
             }
         }
     }
@@ -40,6 +46,7 @@ kotlin {
             dependencies {
                 implementation("com.squareup.okio:okio:3.6.0")
                 implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.1")
+                implementation("com.github.ajalt.clikt:clikt:4.2.1")
             }
         }
         val commonTest by getting
