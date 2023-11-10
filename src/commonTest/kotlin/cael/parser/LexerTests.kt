@@ -8,9 +8,14 @@ import io.kotest.datatest.withData
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.equals.shouldBeEqual
 
-fun singleTokenRange(length: Int, start: Int = 1) = Range(
-    Coords("file", 1, start),
-    Coords("file", 1, start + length - 1)
+fun singleTokenRange(length: Int, start: Int = 1, line: Int = 1) = Range(
+    Coords("file", line, start),
+    Coords("file", line, start + length - 1)
+)
+
+fun range(startLine: Int, startCol: Int, endLine: Int, endCol: Int) = Range(
+    Coords("file", startLine, startCol),
+    Coords("file", endLine, endCol),
 )
 
 val shouldLexToToken: suspend ContainerScope.(Pair<String, Token>) -> Unit = { (string, token) ->
@@ -106,6 +111,117 @@ class LexerTests : DescribeSpec({
             """ "\u2764\uFE0F" """ to Token.StringLiteral("\u2764\uFE0F", singleTokenRange(14, 2)),
             test = shouldLexToToken,
         )
+
+        it("tokenizes a plain interpolated string") {
+            val lexed = """ "\(name)" """.lex().toList()
+            lexed shouldContainExactly listOf(
+                Token.BeginString(singleTokenRange(1, 2)),
+                Token.BeginInterpolating(singleTokenRange(2, 3)),
+                Token.Identifier("name", singleTokenRange(4, 5)),
+                Token.EndInterpolating(singleTokenRange(1, 9)),
+                Token.EndString(singleTokenRange(1, 10)),
+            )
+        }
+
+        it("tokenizes an interpolated string with prefix") {
+            val lexed = """ "Hello, \(name)" """.lex().toList()
+            lexed shouldContainExactly listOf(
+                Token.BeginString(singleTokenRange(1, 2)),
+                Token.StringLiteralSegment("Hello, ", singleTokenRange(7, 3)),
+                Token.BeginInterpolating(singleTokenRange(2, 10)),
+                Token.Identifier("name", singleTokenRange(4, 12)),
+                Token.EndInterpolating(singleTokenRange(1, 16)),
+                Token.EndString(singleTokenRange(1, 17)),
+            )
+        }
+
+        it("tokenizes an interpolated string with suffix") {
+            val lexed = """ "\(name), hello" """.lex().toList()
+            lexed shouldContainExactly listOf(
+                Token.BeginString(singleTokenRange(1, 2)),
+                Token.BeginInterpolating(singleTokenRange(2, 3)),
+                Token.Identifier("name", singleTokenRange(4, 5)),
+                Token.EndInterpolating(singleTokenRange(1, 9)),
+                Token.StringLiteralSegment(", hello", singleTokenRange(7, 10)),
+                Token.EndString(singleTokenRange(1, 17)),
+            )
+        }
+
+        it("tokenizes an interpolated string with a nested set of parenthesis") {
+            val lexed = """ "\((name))" """.lex().toList()
+            lexed shouldContainExactly listOf(
+                Token.BeginString(singleTokenRange(1, 2)),
+                Token.BeginInterpolating(singleTokenRange(2, 3)),
+                Token.LParen(singleTokenRange(1, 5)),
+                Token.Identifier("name", singleTokenRange(4, 6)),
+                Token.RParen(singleTokenRange(1, 10)),
+                Token.EndInterpolating(singleTokenRange(1, 11)),
+                Token.EndString(singleTokenRange(1, 12)),
+            )
+        }
+
+        it("tokenizes an interpolated string with two nested sets of parenthesis") {
+            val lexed = """ "\((name + (1)))" """.lex().toList()
+            lexed shouldContainExactly listOf(
+                Token.BeginString(singleTokenRange(1, 2)),
+                Token.BeginInterpolating(singleTokenRange(2, 3)),
+                Token.LParen(singleTokenRange(1, 5)),
+                Token.Identifier("name", singleTokenRange(4, 6)),
+                Token.Plus(singleTokenRange(1, 11)),
+                Token.LParen(singleTokenRange(1, 13)),
+                Token.IntLiteral(1, singleTokenRange(1, 14)),
+                Token.RParen(singleTokenRange(1, 15)),
+                Token.RParen(singleTokenRange(1, 16)),
+                Token.EndInterpolating(singleTokenRange(1, 17)),
+                Token.EndString(singleTokenRange(1, 18)),
+            )
+        }
+
+        it("tokenizes an interpolated string with both a prefix and a suffix") {
+            val lexed = """ "Hello, \(name), hello" """.lex().toList()
+            lexed shouldContainExactly listOf(
+                Token.BeginString(singleTokenRange(1, 2)),
+                Token.StringLiteralSegment("Hello, ", singleTokenRange(7, 3)),
+                Token.BeginInterpolating(singleTokenRange(2, 10)),
+                Token.Identifier("name", singleTokenRange(4, 12)),
+                Token.EndInterpolating(singleTokenRange(1, 16)),
+                Token.StringLiteralSegment(", hello", singleTokenRange(7, 17)),
+                Token.EndString(singleTokenRange(1, 24)),
+            )
+        }
+
+        it("tokenizes an interpolated string with two interpolations") {
+            val lexed = """ "\(name), \(name)" """.lex().toList()
+            lexed shouldContainExactly listOf(
+                Token.BeginString(singleTokenRange(1, 2)),
+                Token.BeginInterpolating(singleTokenRange(2, 3)),
+                Token.Identifier("name", singleTokenRange(4, 5)),
+                Token.EndInterpolating(singleTokenRange(1, 9)),
+                Token.StringLiteralSegment(", ", singleTokenRange(2, 10)),
+                Token.BeginInterpolating(singleTokenRange(2, 12)),
+                Token.Identifier("name", singleTokenRange(4, 14)),
+                Token.EndInterpolating(singleTokenRange(1, 18)),
+                Token.EndString(singleTokenRange(1, 19)),
+            )
+        }
+
+        it("tokenizes an interpolated string with newlines") {
+            val lexed = """
+                "\(name),
+                \(name)"
+            """.trimIndent().also { println(it)}.lex().toList()
+            lexed shouldContainExactly listOf(
+                Token.BeginString(singleTokenRange(1, 1)),
+                Token.BeginInterpolating(singleTokenRange(2, 2)),
+                Token.Identifier("name", singleTokenRange(4, 4)),
+                Token.EndInterpolating(singleTokenRange(1, 8)),
+                Token.StringLiteralSegment(",\n", range(1, 9, 2, 0)),
+                Token.BeginInterpolating(singleTokenRange(2, 1, 2)),
+                Token.Identifier("name", singleTokenRange(4, 3, 2)),
+                Token.EndInterpolating(singleTokenRange(1, 7, 2)),
+                Token.EndString(singleTokenRange(1, 8, 2)),
+            )
+        }
     }
 
     describe("identifiers") {

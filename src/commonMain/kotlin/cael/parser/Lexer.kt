@@ -37,6 +37,36 @@ class CharIterator(
     val filename: String,
     iterator: Iterator<Char>,
 ) : PeekableIterator<Char>(iterator) {
+    inner class CoordsStringBuilder(
+        private val stringBuilder: StringBuilder
+    ) {
+        private var startCoords: Coords? = null
+        private var endCoords: Coords? = null
+
+        override fun toString() = stringBuilder.toString()
+
+        fun isNotEmpty() = stringBuilder.isNotEmpty()
+
+        fun append(c: Char) {
+            if (stringBuilder.isEmpty()) {
+                startCoords = coords()
+            }
+            endCoords = coords()
+            stringBuilder.append(c)
+        }
+
+        fun clear(): Range {
+            stringBuilder.clear()
+            val start = startCoords ?: coords()
+            val end = endCoords ?: coords()
+            startCoords = null
+            endCoords = null
+            return start..end
+        }
+    }
+
+    fun stringBuilder() = CoordsStringBuilder(StringBuilder())
+
     var line: Int = 1
         private set
 
@@ -182,9 +212,11 @@ object Mode {
     fun string(closingChar: Char): LexerMode = {
         sequence {
             markStart()
-            val builder = StringBuilder()
+            yield(Token.BeginString(range()))
+            val builder = stringBuilder()
             while (hasNext()) {
                 val c = next()
+                val cCoords = coords()
                 if (c == '\\') {
                     when (val c2 = next()) {
                         'n' -> builder.append('\n')
@@ -215,17 +247,94 @@ object Mode {
                             }
                             builder.append(codepoint.toChar())
                         }
+                        '(' -> {
+                            if (builder.isNotEmpty()) {
+                                yield(Token.StringLiteralSegment(builder.toString(), builder.clear()))
+                            }
+                            yield(Token.BeginInterpolating(cCoords..coords()))
+                            yieldAll(stringInterpolation())
+                            markStart()
+                        }
 
                         else -> throw LexerError("Unexpected escape sequence: \\$c2", coords())
                     }
                 } else if (c == closingChar) {
-                    yield(Token.StringLiteral(builder.toString(), range()))
+                    if (builder.isNotEmpty()) {
+                        yield(Token.StringLiteralSegment(builder.toString(), builder.clear()))
+                    }
+                    yield(Token.EndString(coords()..coords()))
                     return@sequence
                 } else {
                     builder.append(c)
                 }
             }
             throw LexerError("Unterminated string literal", coords())
+        }
+    }
+
+    val stringInterpolation: LexerMode = {
+        val delegate = normal().iterator()
+        sequence {
+            var parens = 1
+            while (hasNext()) {
+                val c = peek()
+                when (c) {
+                    ' ', '\t', '\r', '\n' -> {
+                        next()
+                    }
+                    '(' -> {
+                        parens++
+                        yield(delegate.next())
+                    }
+                    ')' -> {
+                        if (--parens == 0) {
+                            next()
+                            yield(Token.EndInterpolating(coords()..coords()))
+                            return@sequence
+                        } else {
+                            yield(delegate.next())
+                        }
+                    }
+                    else -> {
+                        yield(delegate.next())
+                    }
+                }
+            }
+        }
+    }
+}
+
+fun Sequence<Token>.consolidateStringLiterals(): Sequence<Token> {
+    val delegate = this.iterator()
+    return sequence {
+        while (delegate.hasNext()) {
+            val maybeBeginString = delegate.next()
+
+            if (maybeBeginString !is Token.BeginString) {
+                yield(maybeBeginString)
+                continue
+            }
+
+            val maybeStringLiteralSegment = delegate.next()
+            if (maybeStringLiteralSegment is Token.EndString) {
+                yield(Token.StringLiteral("", maybeBeginString.range..maybeStringLiteralSegment.range))
+                continue
+            }
+            if (maybeStringLiteralSegment !is Token.StringLiteralSegment) {
+                yield(maybeBeginString)
+                yield(maybeStringLiteralSegment)
+                continue
+            }
+
+            val maybeEndString = delegate.next()
+            if (maybeEndString !is Token.EndString) {
+                yield(maybeBeginString)
+                yield(maybeStringLiteralSegment)
+                yield(maybeEndString)
+                continue
+            }
+
+            yield(Token.StringLiteral(maybeStringLiteralSegment.value, maybeBeginString.range..maybeEndString.range))
         }
     }
 }
@@ -237,7 +346,7 @@ fun Sequence<Char>.lex(): Sequence<Token> {
         if (iterator.hasNext()) {
             throw LexerError("Unexpected character: ${iterator.next()}", iterator.coords())
         }
-    }
+    }.consolidateStringLiterals()
 }
 
 private fun CharIterator.lexNumber(firstChar: Char): Token {
