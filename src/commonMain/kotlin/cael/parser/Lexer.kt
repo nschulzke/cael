@@ -159,19 +159,19 @@ sealed interface Token {
         override val lexeme = "-"
     }
 
-    data class Times(
+    data class Star(
         override val range: Range
     ) : Token {
         override val lexeme = "*"
     }
 
-    data class Div(
+    data class Slash(
         override val range: Range
     ) : Token {
         override val lexeme = "/"
     }
 
-    data class Mod(
+    data class Percent(
         override val range: Range
     ) : Token {
         override val lexeme = "%"
@@ -361,9 +361,9 @@ fun Sequence<Char>.lex(): Sequence<Token> {
                     '?' -> yield(Token.Question(coords()..coords()))
                     '+' -> yield(Token.Plus(coords()..coords()))
                     '-' -> yield(Token.Minus(coords()..coords()))
-                    '*' -> yield(Token.Times(coords()..coords()))
-                    '/' -> yield(Token.Div(coords()..coords()))
-                    '%' -> yield(Token.Mod(coords()..coords()))
+                    '*' -> yield(Token.Star(coords()..coords()))
+                    '/' -> yield(Token.Slash(coords()..coords()))
+                    '%' -> yield(Token.Percent(coords()..coords()))
 
                     '=' -> {
                         markStart()
@@ -459,7 +459,36 @@ private fun CharIterator.lexString(closingChar: Char): Token {
     val builder = StringBuilder()
     while (hasNext()) {
         val c = next()
-        if (c == closingChar) {
+        if (c == '\\') {
+            when (val c2 = next()) {
+                'n' -> builder.append('\n')
+                'r' -> builder.append('\r')
+                't' -> builder.append('\t')
+                '\\' -> builder.append('\\')
+                closingChar -> builder.append(closingChar)
+                'u' -> {
+                    val codepoint = (0..3).fold(0) { acc, _ ->
+                        val c3 = next()
+                        when (c3) {
+                            in '0'..'9' -> {
+                                acc * 16 + (c3 - '0')
+                            }
+                            in 'a'..'f' -> {
+                                acc * 16 + (c3 - 'a') + 10
+                            }
+                            in 'A'..'F' -> {
+                                acc * 16 + (c3 - 'A') + 10
+                            }
+                            else -> {
+                                throw LexerError("Invalid unicode escape sequence: \\u$c3", coords())
+                            }
+                        }
+                    }
+                    builder.append(codepoint.toChar())
+                }
+                else -> throw LexerError("Unexpected escape sequence: \\$c2", coords())
+            }
+        } else if (c == closingChar) {
             return Token.StringLiteral(builder.toString(), range())
         } else {
             builder.append(c)

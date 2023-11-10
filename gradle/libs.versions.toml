@@ -1,0 +1,26 @@
+[versions]
+kotlin = "1.9.10"
+kotlinx-serialization = "1.5.1"
+kotest = "5.8.0"
+
+clikt = "4.2.1"
+okio = "3.6.0"
+kermit = "2.0.2"
+
+[libraries]
+kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
+kotest-assertions-core = { module = "io.kotest:kotest-assertions-core", version.ref = "kotest" }
+kotest-framework-engine = { module = "io.kotest:kotest-framework-engine", version.ref = "kotest" }
+kotest-framework-datatest = { module = "io.kotest:kotest-framework-datatest", version.ref = "kotest" }
+kotest-runner-junit5 = { module = "io.kotest:kotest-runner-junit5", version.ref = "kotest" }
+
+okio = { module = "com.squareup.okio:okio", version.ref = "okio"}
+clikt = { module = "com.github.ajalt.clikt:clikt", version.ref = "clikt" }
+kermit = { module = "co.touchlab:kermit", version.ref = "kermit"}
+
+
+[plugins]
+kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
+kotlinx-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+
+kotest-multiplatform = { id = "io.kotest.multiplatform", version.ref = "kotest" }

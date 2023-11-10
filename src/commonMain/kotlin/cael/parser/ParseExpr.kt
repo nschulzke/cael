@@ -74,9 +74,9 @@ private val prattParser = Pratt(
 
         Token.Plus::class to Pratt.Infix(ExprPrecedence.term, binary),
         Token.Minus::class to Pratt.Infix(ExprPrecedence.term, binary),
-        Token.Times::class to Pratt.Infix(ExprPrecedence.factor, binary),
-        Token.Div::class to Pratt.Infix(ExprPrecedence.factor, binary),
-        Token.Mod::class to Pratt.Infix(ExprPrecedence.factor, binary),
+        Token.Star::class to Pratt.Infix(ExprPrecedence.factor, binary),
+        Token.Slash::class to Pratt.Infix(ExprPrecedence.factor, binary),
+        Token.Percent::class to Pratt.Infix(ExprPrecedence.factor, binary),
 
         Token.LParen::class to Pratt.Infix<Expr>(ExprPrecedence.call) { left, _ ->
             val args = mutableListOf<Expr>()
