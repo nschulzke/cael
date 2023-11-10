@@ -63,10 +63,10 @@ class CharIterator(
     }
 }
 
-sealed class LexerMode(
-    val lex: CharIterator.(modes: ArrayDeque<LexerMode>) -> Sequence<Token>
-) {
-    data object Normal : LexerMode({
+typealias LexerMode = CharIterator.() -> Sequence<Token>
+
+object Mode {
+    val normal: LexerMode = {
         sequence {
             while (hasNext()) {
                 when (val c = next()) {
@@ -154,13 +154,13 @@ sealed class LexerMode(
                     }
 
                     '"' -> {
-                        val parsed = lexString('"')
-                        yield(parsed)
+                        val mode = string('"')
+                        yieldAll(mode())
                     }
 
                     '\'' -> {
-                        val parsed = lexString('\'')
-                        yield(parsed)
+                        val mode = string('\'')
+                        yieldAll(mode())
                     }
 
                     else -> {
@@ -177,65 +177,63 @@ sealed class LexerMode(
                 }
             }
         }
-    })
-}
+    }
 
-private fun CharIterator.lexString(closingChar: Char): Token {
-    markStart()
-    val builder = StringBuilder()
-    while (hasNext()) {
-        val c = next()
-        if (c == '\\') {
-            when (val c2 = next()) {
-                'n' -> builder.append('\n')
-                'r' -> builder.append('\r')
-                't' -> builder.append('\t')
-                '\\' -> builder.append('\\')
-                closingChar -> builder.append(closingChar)
-                'u' -> {
-                    val codepoint = (0..3).fold(0) { acc, _ ->
-                        val c3 = next()
-                        when (c3) {
-                            in '0'..'9' -> {
-                                acc * 16 + (c3 - '0')
-                            }
+    fun string(closingChar: Char): LexerMode = {
+        sequence {
+            markStart()
+            val builder = StringBuilder()
+            while (hasNext()) {
+                val c = next()
+                if (c == '\\') {
+                    when (val c2 = next()) {
+                        'n' -> builder.append('\n')
+                        'r' -> builder.append('\r')
+                        't' -> builder.append('\t')
+                        '\\' -> builder.append('\\')
+                        closingChar -> builder.append(closingChar)
+                        'u' -> {
+                            val codepoint = (0..3).fold(0) { acc, _ ->
+                                val c3 = next()
+                                when (c3) {
+                                    in '0'..'9' -> {
+                                        acc * 16 + (c3 - '0')
+                                    }
 
-                            in 'a'..'f' -> {
-                                acc * 16 + (c3 - 'a') + 10
-                            }
+                                    in 'a'..'f' -> {
+                                        acc * 16 + (c3 - 'a') + 10
+                                    }
 
-                            in 'A'..'F' -> {
-                                acc * 16 + (c3 - 'A') + 10
-                            }
+                                    in 'A'..'F' -> {
+                                        acc * 16 + (c3 - 'A') + 10
+                                    }
 
-                            else -> {
-                                throw LexerError("Invalid unicode escape sequence: \\u$c3", coords())
+                                    else -> {
+                                        throw LexerError("Invalid unicode escape sequence: \\u$c3", coords())
+                                    }
+                                }
                             }
+                            builder.append(codepoint.toChar())
                         }
-                    }
-                    builder.append(codepoint.toChar())
-                }
 
-                else -> throw LexerError("Unexpected escape sequence: \\$c2", coords())
+                        else -> throw LexerError("Unexpected escape sequence: \\$c2", coords())
+                    }
+                } else if (c == closingChar) {
+                    yield(Token.StringLiteral(builder.toString(), range()))
+                    return@sequence
+                } else {
+                    builder.append(c)
+                }
             }
-        } else if (c == closingChar) {
-            return Token.StringLiteral(builder.toString(), range())
-        } else {
-            builder.append(c)
+            throw LexerError("Unterminated string literal", coords())
         }
     }
-    throw LexerError("Unterminated string literal", coords())
 }
 
 fun Sequence<Char>.lex(): Sequence<Token> {
     val iterator = CharIterator("file", iterator())
-    val modes = ArrayDeque<LexerMode>()
-    modes.addFirst(LexerMode.Normal)
     return sequence {
-        while (modes.size > 0) {
-            val mode = modes.removeFirst()
-            yieldAll(mode.lex(iterator, modes))
-        }
+        yieldAll(Mode.normal(iterator))
         if (iterator.hasNext()) {
             throw LexerError("Unexpected character: ${iterator.next()}", iterator.coords())
         }
