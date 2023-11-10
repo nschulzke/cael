@@ -268,6 +268,27 @@ sealed interface Token {
         override val lexeme = "\"$value\""
     }
 
+    data class InterpolatedStringStart(
+        val value: String,
+        override val range: Range,
+    ) : Token {
+        override val lexeme = "\"$value\\("
+    }
+
+    data class InterpolatedStringMiddle(
+        val value: String,
+        override val range: Range,
+    ) : Token {
+        override val lexeme = ")$value\\("
+    }
+
+    data class InterpolatedStringEnd(
+        val value: String,
+        override val range: Range,
+    ) : Token {
+        override val lexeme = ")$value\""
+    }
+
     data class Identifier(
         val name: String,
         override val range: Range,

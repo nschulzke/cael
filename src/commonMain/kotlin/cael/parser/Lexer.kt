@@ -63,12 +63,13 @@ class CharIterator(
     }
 }
 
-fun Sequence<Char>.lex(): Sequence<Token> {
-    val iterator = CharIterator("file", iterator())
-    return sequence {
-        with(iterator) {
-            while (iterator.hasNext()) {
-                when (val c = iterator.next()) {
+sealed class LexerMode(
+    val lex: CharIterator.(modes: ArrayDeque<LexerMode>) -> Sequence<Token>
+) {
+    data object Normal : LexerMode({
+        sequence {
+            while (hasNext()) {
+                when (val c = next()) {
                     ' ', '\t', '\r', '\n' -> {
                         // Skip whitespace
                     }
@@ -92,9 +93,9 @@ fun Sequence<Char>.lex(): Sequence<Token> {
 
                     '=' -> {
                         markStart()
-                        if (iterator.hasNext() && iterator.match('>')) {
+                        if (hasNext() && match('>')) {
                             yield(Token.Arrow(range()))
-                        } else if (iterator.hasNext() && iterator.match('=')) {
+                        } else if (hasNext() && match('=')) {
                             yield(Token.EqEq(range()))
                         } else {
                             yield(Token.Eq(range()))
@@ -103,7 +104,7 @@ fun Sequence<Char>.lex(): Sequence<Token> {
 
                     '!' -> {
                         markStart()
-                        if (iterator.hasNext() && iterator.match('=')) {
+                        if (hasNext() && match('=')) {
                             yield(Token.BangEq(range()))
                         } else {
                             yield(Token.Bang(range()))
@@ -112,7 +113,7 @@ fun Sequence<Char>.lex(): Sequence<Token> {
 
                     '<' -> {
                         markStart()
-                        if (iterator.hasNext() && iterator.match('=')) {
+                        if (hasNext() && match('=')) {
                             yield(Token.LtEq(range()))
                         } else {
                             yield(Token.Lt(range()))
@@ -121,7 +122,7 @@ fun Sequence<Char>.lex(): Sequence<Token> {
 
                     '>' -> {
                         markStart()
-                        if (iterator.hasNext() && iterator.match('=')) {
+                        if (hasNext() && match('=')) {
                             yield(Token.GtEq(range()))
                         } else {
                             yield(Token.Gt(range()))
@@ -130,7 +131,7 @@ fun Sequence<Char>.lex(): Sequence<Token> {
 
                     '&' -> {
                         markStart()
-                        if (iterator.hasNext() && iterator.match('&')) {
+                        if (hasNext() && match('&')) {
                             yield(Token.AmpAmp(range()))
                         } else {
                             yield(Token.Amp(range()))
@@ -139,7 +140,7 @@ fun Sequence<Char>.lex(): Sequence<Token> {
 
                     '|' -> {
                         markStart()
-                        if (iterator.hasNext() && iterator.match('|')) {
+                        if (hasNext() && match('|')) {
                             yield(Token.PipePipe(range()))
                         } else {
                             yield(Token.Pipe(range()))
@@ -147,7 +148,7 @@ fun Sequence<Char>.lex(): Sequence<Token> {
                     }
 
                     '#' -> {
-                        while (iterator.hasNext() && iterator.next() != '\n') {
+                        while (hasNext() && next() != '\n') {
                             // Skip comment
                         }
                     }
@@ -176,7 +177,7 @@ fun Sequence<Char>.lex(): Sequence<Token> {
                 }
             }
         }
-    }
+    })
 }
 
 private fun CharIterator.lexString(closingChar: Char): Token {
@@ -198,12 +199,15 @@ private fun CharIterator.lexString(closingChar: Char): Token {
                             in '0'..'9' -> {
                                 acc * 16 + (c3 - '0')
                             }
+
                             in 'a'..'f' -> {
                                 acc * 16 + (c3 - 'a') + 10
                             }
+
                             in 'A'..'F' -> {
                                 acc * 16 + (c3 - 'A') + 10
                             }
+
                             else -> {
                                 throw LexerError("Invalid unicode escape sequence: \\u$c3", coords())
                             }
@@ -211,6 +215,7 @@ private fun CharIterator.lexString(closingChar: Char): Token {
                     }
                     builder.append(codepoint.toChar())
                 }
+
                 else -> throw LexerError("Unexpected escape sequence: \\$c2", coords())
             }
         } else if (c == closingChar) {
@@ -220,6 +225,21 @@ private fun CharIterator.lexString(closingChar: Char): Token {
         }
     }
     throw LexerError("Unterminated string literal", coords())
+}
+
+fun Sequence<Char>.lex(): Sequence<Token> {
+    val iterator = CharIterator("file", iterator())
+    val modes = ArrayDeque<LexerMode>()
+    modes.addFirst(LexerMode.Normal)
+    return sequence {
+        while (modes.size > 0) {
+            val mode = modes.removeFirst()
+            yieldAll(mode.lex(iterator, modes))
+        }
+        if (iterator.hasNext()) {
+            throw LexerError("Unexpected character: ${iterator.next()}", iterator.coords())
+        }
+    }
 }
 
 private fun CharIterator.lexNumber(firstChar: Char): Token {
