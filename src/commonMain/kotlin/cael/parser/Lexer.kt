@@ -1,13 +1,12 @@
 package cael.parser
 
-import cael.ast.Coords
 import cael.ast.Range
 import cael.io.asSequenceUtf8
 import cael.io.toSource
 import okio.*
 
-class LexerError(val filename: String, val description: String, val coords: Coords) :
-    Error("Lexing error at $filename:${coords.line}:${coords.col} $description")
+class LexerError(val filename: String, val line: Int, val col: Int, val description: String) :
+    Error("Lexing error at $filename:${line}:${col} $description")
 
 private val keywords = mapOf<String, (Range) -> Token>(
     "let" to { Token.Let(it) },
@@ -32,8 +31,8 @@ class CharIterator(
     inner class CoordsStringBuilder(
         private val stringBuilder: StringBuilder
     ) {
-        private var startCoords: Coords? = null
-        private var endCoords: Coords? = null
+        private var startOffset: Int? = null
+        private var length: Int = 0
 
         override fun toString() = stringBuilder.toString()
 
@@ -41,19 +40,18 @@ class CharIterator(
 
         fun append(c: Char) {
             if (stringBuilder.isEmpty()) {
-                startCoords = coords()
+                startOffset = offset
             }
-            endCoords = coords()
+            length++
             stringBuilder.append(c)
         }
 
         fun clear(): Range {
             stringBuilder.clear()
-            val start = startCoords ?: coords()
-            val end = endCoords ?: coords()
-            startCoords = null
-            endCoords = null
-            return start..end
+            val range = Range(startOffset ?: offset, length)
+            startOffset = null
+            length = 0
+            return range
         }
     }
 
@@ -65,17 +63,24 @@ class CharIterator(
     var col: Int = 0
         private set
 
-    private var startCoords = coords()
+    var offset: Int = 0
+        private set
 
-    fun coords() = Coords(line, col)
+    var length: Int = 0
+        private set
+
+    private var startOffset = offset
 
     fun markStart() {
-        startCoords = coords()
+        startOffset = offset
+        length = 0
     }
 
-    fun range() = startCoords..coords()
+    fun range() = Range(startOffset..offset)
 
     override val onNext: ((Char?) -> Unit) = {
+        offset++
+        length++
         if (it == '\n') {
             line++
             col = 0
@@ -96,22 +101,22 @@ object Mode {
                         // Skip whitespace
                     }
 
-                    '{' -> yield(Token.LBrace(coords()..coords()))
-                    '}' -> yield(Token.RBrace(coords()..coords()))
-                    '(' -> yield(Token.LParen(coords()..coords()))
-                    ')' -> yield(Token.RParen(coords()..coords()))
-                    '[' -> yield(Token.LBracket(coords()..coords()))
-                    ']' -> yield(Token.RBracket(coords()..coords()))
+                    '{' -> yield(Token.LBrace(Range(offset, 1)))
+                    '}' -> yield(Token.RBrace(Range(offset, 1)))
+                    '(' -> yield(Token.LParen(Range(offset, 1)))
+                    ')' -> yield(Token.RParen(Range(offset, 1)))
+                    '[' -> yield(Token.LBracket(Range(offset, 1)))
+                    ']' -> yield(Token.RBracket(Range(offset, 1)))
 
-                    ',' -> yield(Token.Comma(coords()..coords()))
-                    ':' -> yield(Token.Colon(coords()..coords()))
-                    '.' -> yield(Token.Dot(coords()..coords()))
-                    '?' -> yield(Token.Question(coords()..coords()))
-                    '+' -> yield(Token.Plus(coords()..coords()))
-                    '-' -> yield(Token.Minus(coords()..coords()))
-                    '*' -> yield(Token.Star(coords()..coords()))
-                    '/' -> yield(Token.Slash(coords()..coords()))
-                    '%' -> yield(Token.Percent(coords()..coords()))
+                    ',' -> yield(Token.Comma(Range(offset, 1)))
+                    ':' -> yield(Token.Colon(Range(offset, 1)))
+                    '.' -> yield(Token.Dot(Range(offset, 1)))
+                    '?' -> yield(Token.Question(Range(offset, 1)))
+                    '+' -> yield(Token.Plus(Range(offset, 1)))
+                    '-' -> yield(Token.Minus(Range(offset, 1)))
+                    '*' -> yield(Token.Star(Range(offset, 1)))
+                    '/' -> yield(Token.Slash(Range(offset, 1)))
+                    '%' -> yield(Token.Percent(Range(offset, 1)))
 
                     '=' -> {
                         markStart()
@@ -193,7 +198,7 @@ object Mode {
                             val parsed = lexIdentifier(c)
                             yield(parsed)
                         } else {
-                            throw LexerError(filename, "Unexpected character: $c", coords())
+                            throw LexerError(filename, line, col, "Unexpected character: $c")
                         }
                     }
                 }
@@ -208,7 +213,7 @@ object Mode {
             val builder = stringBuilder()
             while (hasNext()) {
                 val c = next()
-                val cCoords = coords()
+                val charOffset = offset
                 if (c == '\\') {
                     when (val c2 = next()) {
                         'n' -> builder.append('\n')
@@ -233,7 +238,7 @@ object Mode {
                                     }
 
                                     else -> {
-                                        throw LexerError(filename, "Invalid unicode escape sequence: \\u$c3", coords())
+                                        throw LexerError(filename, line, col, "Invalid unicode escape sequence: \\u$c3")
                                     }
                                 }
                             }
@@ -243,24 +248,24 @@ object Mode {
                             if (builder.isNotEmpty()) {
                                 yield(Token.StringLiteralSegment(builder.toString(), builder.clear()))
                             }
-                            yield(Token.BeginInterpolating(cCoords..coords()))
+                            yield(Token.BeginInterpolating(Range(charOffset, 2)))
                             yieldAll(stringInterpolation())
                             markStart()
                         }
 
-                        else -> throw LexerError(filename, "Unexpected escape sequence: \\$c2", coords())
+                        else -> throw LexerError(filename, line, col, "Unexpected escape sequence: \\$c2")
                     }
                 } else if (c == closingChar) {
                     if (builder.isNotEmpty()) {
                         yield(Token.StringLiteralSegment(builder.toString(), builder.clear()))
                     }
-                    yield(Token.EndString(coords()..coords()))
+                    yield(Token.EndString(Range(offset, 1)))
                     return@sequence
                 } else {
                     builder.append(c)
                 }
             }
-            throw LexerError(filename, "Unterminated string literal", coords())
+            throw LexerError(filename, line, col, "Unterminated string literal")
         }
     }
 
@@ -281,7 +286,7 @@ object Mode {
                     ')' -> {
                         if (--parens == 0) {
                             next()
-                            yield(Token.EndInterpolating(coords()..coords()))
+                            yield(Token.EndInterpolating(Range(offset, 1)))
                             return@sequence
                         } else {
                             yield(delegate.next())
@@ -336,7 +341,7 @@ fun Sequence<Char>.lex(filename: String = "file"): Sequence<Token> {
     return sequence {
         yieldAll(Mode.normal(iterator))
         if (iterator.hasNext()) {
-            throw LexerError(filename, "Unexpected character: ${iterator.next()}", iterator.coords())
+            throw LexerError(filename, 0, 0, "Unexpected character: ${iterator.next()}")
         }
     }.consolidateStringLiterals()
 }
