@@ -36,6 +36,29 @@ sealed interface Decl : Node {
             val components: List<PatternRecordItem>,
             override val range: Range,
         ) : Struct
+
+        @Serializable
+        data class Match(
+            val name: String,
+            val cases: List<Case>,
+            override val range: Range,
+        ) : Struct {
+            sealed interface Case : Node {
+                @Serializable
+                data class Tuple(
+                    val parameters: List<Pattern>,
+                    val value: Expr,
+                    override val range: Range,
+                ) : Case
+
+                @Serializable
+                data class Record(
+                    val parameters: List<PatternRecordItem>,
+                    val value: Expr,
+                    override val range: Range,
+                ) : Case
+            }
+        }
     }
 
     @Serializable
