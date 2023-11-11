@@ -27,6 +27,7 @@ class LexerTests : DescribeSpec({
         withData(
             nameFn = { "keyword: ${it.first}" },
             "let" to Token.Let(singleTokenRange(3)),
+            "fun" to Token.Fun(singleTokenRange(3)),
             "match" to Token.Match(singleTokenRange(5)),
             "struct" to Token.Struct(singleTokenRange(6)),
             test = shouldLexToToken,

@@ -26,7 +26,7 @@ fun temporaryAnyType(): PythonType = PythonType.Raw("Any")
 
 fun CaelDecl.toPython(): List<PythonStmt> {
     return when (this) {
-        is Decl.Let.Bare -> {
+        is Decl.Let -> {
             val type = temporaryAnyType()
             val value = value.toPython()
             listOf(
@@ -38,7 +38,7 @@ fun CaelDecl.toPython(): List<PythonStmt> {
             )
         }
 
-        is Decl.Let.Record -> {
+        is Decl.Fun.Record -> {
             val type = temporaryAnyType()
             val returnValue = value.toPython()
             val parameters = parameters.map {
@@ -60,7 +60,7 @@ fun CaelDecl.toPython(): List<PythonStmt> {
             )
         }
 
-        is Decl.Let.Tuple -> {
+        is Decl.Fun.Tuple -> {
             val returnType = temporaryAnyType()
             val returnValue = value.toPython()
             val parameters = parameters.mapIndexed { index, pattern ->

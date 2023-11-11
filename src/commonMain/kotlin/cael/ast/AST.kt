@@ -39,21 +39,21 @@ sealed interface Decl : Node {
     }
 
     @Serializable
-    sealed interface Let : Decl {
-        @Serializable
-        data class Bare(
-            val name: String,
-            val value: Expr,
-            override val range: Range,
-        ) : Let
+    data class Let(
+        val name: String,
+        val value: Expr,
+        override val range: Range,
+    ) : Decl
 
+    @Serializable
+    sealed interface Fun : Decl {
         @Serializable
         data class Tuple(
             val name: String,
             val parameters: List<Pattern>,
             val value: Expr,
             override val range: Range,
-        ) : Let
+        ) : Fun
 
         @Serializable
         data class Record(
@@ -61,7 +61,7 @@ sealed interface Decl : Node {
             val parameters: List<PatternRecordItem>,
             val value: Expr,
             override val range: Range,
-        ) : Let
+        ) : Fun
     }
 }
 

@@ -13,6 +13,12 @@ sealed interface Token {
         override val lexeme = "let"
     }
 
+    data class Fun(
+        override val range: Range
+    ) : Token {
+        override val lexeme = "fun"
+    }
+
     data class Match(
         override val range: Range
     ) : Token {

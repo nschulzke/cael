@@ -11,6 +11,7 @@ class LexerError(val description: String, val coords: Coords) :
 
 private val keywords = mapOf<String, (Range) -> Token>(
     "let" to { Token.Let(it) },
+    "fun" to { Token.Fun(it) },
     "match" to { Token.Match(it) },
     "struct" to { Token.Struct(it) },
 )

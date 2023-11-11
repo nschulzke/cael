@@ -8,12 +8,12 @@ let barObj = Bar("test")
 
 let bazObj = Baz { property = Bar("bazTest") }
 
-let something(Foo) = None
+fun something(Foo) => None
 # let something(Bar(string)) = string
 # let something(Baz { property = Bar(string) }) = string
 
 let test = something(barObj)
 
-let recordFun { arg1 = arg1, arg2 = arg2 } = arg1
+fun recordFun { arg1 = arg1, arg2 = arg2 } => arg1
 
 let test2 = recordFun { arg1 = "test", arg2 = 1 }
