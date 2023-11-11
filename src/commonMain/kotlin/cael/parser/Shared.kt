@@ -1,9 +1,35 @@
 package cael.parser
 
+import cael.ast.Expr
+import cael.ast.ExprRecordItem
 import cael.ast.Pattern
 import cael.ast.PatternRecordItem
 
-fun PeekableIterator<Token>.parseTupleComponents(): MutableList<Pattern> {
+fun PeekableIterator<Token>.parseExprTupleComponents(): MutableList<Expr> {
+    val args = mutableListOf<Expr>()
+    if (peek() !is Token.RParen) {
+        args.add(parseExpr())
+        do {
+            args.add(parseExpr())
+        } while (match<Token.Comma>())
+    }
+    return args
+}
+
+fun PeekableIterator<Token>.parseExprRecordComponents(): MutableList<ExprRecordItem> {
+    val args = mutableListOf<ExprRecordItem>()
+    if (peek() !is Token.RBrace) {
+        do {
+            val identifier = parseIdentifier()
+            expect<Token.Eq>()
+            val value = parseExpr()
+            args.add(ExprRecordItem(identifier.name, value, identifier.range..value.range))
+        } while (match<Token.Comma>())
+    }
+    return args
+}
+
+fun PeekableIterator<Token>.parsePatternTupleComponents(): MutableList<Pattern> {
     val components = mutableListOf<Pattern>()
     if (peek() !is Token.RParen) {
         do {
@@ -13,7 +39,7 @@ fun PeekableIterator<Token>.parseTupleComponents(): MutableList<Pattern> {
     return components
 }
 
-fun PeekableIterator<Token>.parseRecordComponents(): MutableList<PatternRecordItem> {
+fun PeekableIterator<Token>.parsePatternRecordComponents(): MutableList<PatternRecordItem> {
     val components = mutableListOf<PatternRecordItem>()
     if (peek() !is Token.RBrace) {
         do {

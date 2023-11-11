@@ -23,14 +23,14 @@ private fun PeekableIterator<Token>.parsePatternAfterIdentifier(token: Token.Ide
 
 private fun PeekableIterator<Token>.parseTupleStructPatternPartial(identifier: Token.Identifier): Pattern {
     expect<Token.LParen>()
-    val components = parseTupleComponents()
+    val components = parsePatternTupleComponents()
     val end = expect<Token.RParen>()
     return Pattern.Struct.Tuple(identifier.name, components, identifier.range..end.range)
 }
 
 private fun PeekableIterator<Token>.parseRecordStructPatternPartial(identifier: Token.Identifier): Pattern {
     expect<Token.LBrace>()
-    val components = parseRecordComponents()
+    val components = parsePatternRecordComponents()
     val end = expect<Token.RBrace>()
     return Pattern.Struct.Record(identifier.name, components, identifier.range..end.range)
 }

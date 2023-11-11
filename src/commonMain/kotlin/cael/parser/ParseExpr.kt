@@ -79,26 +79,12 @@ private val prattParser = Pratt(
         Token.Percent::class to Pratt.Infix(ExprPrecedence.factor, binary),
 
         Token.LParen::class to Pratt.Infix(ExprPrecedence.call) { left, _ ->
-            val args = mutableListOf<Expr>()
-            if (peek() !is Token.RParen) {
-                args.add(parseExpr())
-                do {
-                    args.add(parseExpr())
-                } while (match<Token.Comma>())
-            }
+            val args = parseExprTupleComponents()
             val end = expect<Token.RParen>()
             Expr.Call.Tuple(left, args, left.range..end.range)
         },
         Token.LBrace::class to Pratt.Infix(ExprPrecedence.call) { callee, _ ->
-            val args = mutableListOf<ExprRecordItem>()
-            if (peek() !is Token.RBrace) {
-                do {
-                    val identifier = parseIdentifier()
-                    expect<Token.Eq>()
-                    val value = parseExpr()
-                    args.add(ExprRecordItem(identifier.name, value, identifier.range..value.range))
-                } while (match<Token.Comma>())
-            }
+            val args = parseExprRecordComponents()
             val end = expect<Token.RBrace>()
             Expr.Call.Record(callee, args, callee.range..end.range)
         },
