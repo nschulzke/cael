@@ -11,21 +11,12 @@ fun PeekableIterator<Token>.parseExprRecordItem(): ExprRecordItem {
     return ExprRecordItem(identifier.name, value, identifier.range..value.range)
 }
 
-fun PeekableIterator<Token>.parsePatternRecordItem(): PatternRecordItem {
-    val identifier = parseIdentifier()
-    expect<Token.Eq>()
-    val pattern = parsePattern()
-    return PatternRecordItem(identifier.name, pattern, identifier.range..pattern.range)
-}
-
 fun PeekableIterator<Token>.parseTupleComponents(): MutableList<Pattern> {
     val components = mutableListOf<Pattern>()
     if (peek() !is Token.RParen) {
-        components.add(parsePattern())
-        while (peek() is Token.Comma) {
-            expect<Token.Comma>()
+        do {
             components.add(parsePattern())
-        }
+        } while (match<Token.Comma>())
     }
     return components
 }
@@ -33,11 +24,12 @@ fun PeekableIterator<Token>.parseTupleComponents(): MutableList<Pattern> {
 fun PeekableIterator<Token>.parseRecordComponents(): MutableList<PatternRecordItem> {
     val components = mutableListOf<PatternRecordItem>()
     if (peek() !is Token.RBrace) {
-        components.add(parsePatternRecordItem())
-        while (peek() is Token.Comma) {
-            expect<Token.Comma>()
-            components.add(parsePatternRecordItem())
-        }
+        do {
+            val identifier = parseIdentifier()
+            expect<Token.Eq>()
+            val pattern = parsePattern()
+            components.add(PatternRecordItem(identifier.name, pattern, identifier.range..pattern.range))
+        } while (match<Token.Comma>())
     }
     return components
 }
