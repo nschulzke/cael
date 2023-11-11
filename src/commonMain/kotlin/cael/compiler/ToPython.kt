@@ -83,6 +83,8 @@ fun CaelDecl.toPython(): List<PythonStmt> {
             )
         }
 
+        is Decl.Fun.Match -> TODO()
+
         is Decl.Struct.Bare -> {
             listOf(
                 PythonStmt.ClassDef(

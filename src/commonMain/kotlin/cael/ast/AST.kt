@@ -62,6 +62,29 @@ sealed interface Decl : Node {
             val value: Expr,
             override val range: Range,
         ) : Fun
+
+        @Serializable
+        data class Match(
+            val name: String,
+            val cases: List<Case>,
+            override val range: Range,
+        ) : Fun {
+            sealed interface Case : Node {
+                @Serializable
+                data class Tuple(
+                    val parameters: List<Pattern>,
+                    val value: Expr,
+                    override val range: Range,
+                ) : Case
+
+                @Serializable
+                data class Record(
+                    val parameters: List<PatternRecordItem>,
+                    val value: Expr,
+                    override val range: Range,
+                ) : Case
+            }
+        }
     }
 }
 

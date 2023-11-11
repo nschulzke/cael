@@ -49,6 +49,7 @@ private fun PeekableIterator<Token>.parseFunDecl(): Decl.Fun {
     return when (peekOrNull()) {
         is Token.LParen -> parseTupleFunPartial(start, name)
         is Token.LBrace -> parseRecordFunPartial(start, name)
+        is Token.Pipe -> parseMatchFunPartial(start, name)
         else -> throw Exception("Unexpected token ${peekOrNull()}")
     }
 }
@@ -69,4 +70,34 @@ private fun PeekableIterator<Token>.parseRecordFunPartial(start: Token.Fun, name
     expect<Token.Arrow>()
     val value = parseExpr()
     return Decl.Fun.Record(name, components, value, start.range..value.range)
+}
+
+private fun PeekableIterator<Token>.parseMatchFunPartial(start: Token.Fun, name: String): Decl.Fun.Match {
+    val cases = mutableListOf<Decl.Fun.Match.Case>()
+    while (match<Token.Pipe>()) {
+        when (peekOrNull()) {
+            is Token.LParen -> cases.add(parseTupleMatchCase())
+            is Token.LBrace -> cases.add(parseRecordMatchCase())
+            else -> throw Exception("Unexpected token ${peekOrNull()}")
+        }
+    }
+    return Decl.Fun.Match(name, cases, start.range..cases.last().range)
+}
+
+private fun PeekableIterator<Token>.parseTupleMatchCase(): Decl.Fun.Match.Case.Tuple {
+    val first = expect<Token.LParen>()
+    val parameters = parsePatternTupleComponents()
+    expect<Token.RParen>()
+    expect<Token.Arrow>()
+    val value = parseExpr()
+    return Decl.Fun.Match.Case.Tuple(parameters, value, first.range..value.range)
+}
+
+private fun PeekableIterator<Token>.parseRecordMatchCase(): Decl.Fun.Match.Case.Record {
+    val first = expect<Token.LBrace>()
+    val parameters = parsePatternRecordComponents()
+    expect<Token.RBrace>()
+    expect<Token.Arrow>()
+    val value = parseExpr()
+    return Decl.Fun.Match.Case.Record(parameters, value, first.range..value.range)
 }

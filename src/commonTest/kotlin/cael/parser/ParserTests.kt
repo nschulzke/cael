@@ -189,6 +189,50 @@ class ParserTests : DescribeSpec({
                 range = Range(1, 28),
             )
         }
+
+        it("parses a fun decl with two arms") {
+            "fun f | (Bar) => 1 | { baz = Baz } => 2".lex().parse() shouldBe Program(
+                declarations = listOf(
+                    Decl.Fun.Match(
+                        name = "f",
+                        cases = listOf(
+                            Decl.Fun.Match.Case.Tuple(
+                                parameters = listOf(
+                                    Pattern.Identifier(
+                                        name = "Bar",
+                                        range = Range(10, 3),
+                                    )
+                                ),
+                                value = Expr.Literal.Int(
+                                    value = 1,
+                                    range = Range(18, 1),
+                                ),
+                                range = Range(9, 10),
+                            ),
+                            Decl.Fun.Match.Case.Record(
+                                parameters = listOf(
+                                    PatternRecordItem(
+                                        name = "baz",
+                                        pattern = Pattern.Identifier(
+                                            name = "Baz",
+                                            range = Range(30, 3),
+                                        ),
+                                        range = Range(24, 9),
+                                    )
+                                ),
+                                value = Expr.Literal.Int(
+                                    value = 2,
+                                    range = Range(39, 1),
+                                ),
+                                range = Range(22, 18),
+                            ),
+                        ),
+                        range = Range(1, 39),
+                    )
+                ),
+                range = Range(1, 39),
+            )
+        }
     }
 
     describe("pattern operators") {
