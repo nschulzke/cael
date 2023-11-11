@@ -128,14 +128,14 @@ sealed interface Expr : Node {
 
     @Serializable
     data class Match(
-        val value: Expr,
+        val expr: Expr,
         val cases: List<Case>,
         override val range: Range,
     ) : Expr {
         @Serializable
         data class Case(
             val pattern: Pattern,
-            val body: Expr,
+            val value: Expr,
             override val range: Range,
         ) : Node
     }

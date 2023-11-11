@@ -316,4 +316,52 @@ class ParserTests : DescribeSpec({
             )
         }
     }
+
+    describe("match expression") {
+        it("parses a match expression with two arms") {
+            "let x = match foo | Bar => 1 | Baz => 2".lex().parse() shouldBe Program(
+                declarations = listOf(
+                    Decl.Let(
+                        pattern = Pattern.Identifier(
+                            name = "x",
+                            range = Range(5, 1),
+                        ),
+                        value = Expr.Match(
+                            expr = Expr.Identifier(
+                                name = "foo",
+                                range = Range(15, 3),
+                            ),
+                            cases = listOf(
+                                Expr.Match.Case(
+                                    pattern = Pattern.Identifier(
+                                        name = "Bar",
+                                        range = Range(21, 3),
+                                    ),
+                                    value = Expr.Literal.Int(
+                                        value = 1,
+                                        range = Range(28, 1),
+                                    ),
+                                    range = Range(21, 8),
+                                ),
+                                Expr.Match.Case(
+                                    pattern = Pattern.Identifier(
+                                        name = "Baz",
+                                        range = Range(32, 3),
+                                    ),
+                                    value = Expr.Literal.Int(
+                                        value = 2,
+                                        range = Range(39, 1),
+                                    ),
+                                    range = Range(32, 8),
+                                ),
+                            ),
+                            range = Range(9, 31),
+                        ),
+                        range = Range(1, 39),
+                    )
+                ),
+                range = Range(1, 39),
+            )
+        }
+    }
 })
