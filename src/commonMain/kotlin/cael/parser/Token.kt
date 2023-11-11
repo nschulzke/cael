@@ -7,30 +7,6 @@ sealed interface Token {
     val range: Range
     val lexeme: String
 
-    data class Dec(
-        override val range: Range
-    ) : Token {
-        override val lexeme = "dec"
-    }
-
-    data class End(
-        override val range: Range
-    ) : Token {
-        override val lexeme = "end"
-    }
-
-    data class For(
-        override val range: Range
-    ) : Token {
-        override val lexeme = "for"
-    }
-
-    data class Is(
-        override val range: Range
-    ) : Token {
-        override val lexeme = "is"
-    }
-
     data class Let(
         override val range: Range
     ) : Token {
@@ -41,18 +17,6 @@ sealed interface Token {
         override val range: Range
     ) : Token {
         override val lexeme = "match"
-    }
-
-    data class Module(
-        override val range: Range
-    ) : Token {
-        override val lexeme = "module"
-    }
-
-    data class Open(
-        override val range: Range
-    ) : Token {
-        override val lexeme = "open"
     }
 
     data class Struct(

@@ -10,14 +10,8 @@ class LexerError(val description: String, val coords: Coords) :
     Error("Lexing error at ${coords.filename}:${coords.line}:${coords.col} $description")
 
 private val keywords = mapOf<String, (Range) -> Token>(
-    "dec" to { Token.Dec(it) },
-    "end" to { Token.End(it) },
-    "for" to { Token.For(it) },
-    "is" to { Token.Is(it) },
     "let" to { Token.Let(it) },
     "match" to { Token.Match(it) },
-    "module" to { Token.Module(it) },
-    "open" to { Token.Open(it) },
     "struct" to { Token.Struct(it) },
 )
 

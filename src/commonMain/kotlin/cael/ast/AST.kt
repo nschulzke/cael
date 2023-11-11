@@ -16,26 +16,6 @@ data class Program(
 @Serializable
 sealed interface Decl : Node {
     @Serializable
-    data class Module(
-        val name: String,
-        val declarations: List<Decl>,
-        override val range: Range,
-    ) : Decl
-
-    @Serializable
-    data class Open(
-        val name: String,
-        override val range: Range,
-    ) : Decl
-
-    @Serializable
-    data class TypeAlias(
-        val name: String,
-        val body: Pattern,
-        override val range: Range,
-    ) : Decl
-
-    @Serializable
     sealed interface Struct : Decl {
         @Serializable
         data class Bare(
@@ -129,32 +109,6 @@ sealed interface Expr : Node {
             val arguments: List<ExprRecordItem>,
             override val range: Range,
         ) : Call
-    }
-
-    @Serializable
-    sealed interface ExtensionCall : Expr {
-        @Serializable
-        data class Bare(
-            val callee: Expr,
-            val name: String,
-            override val range: Range,
-        ) : ExtensionCall
-
-        @Serializable
-        data class Tuple(
-            val callee: Expr,
-            val name: String,
-            val arguments: List<Expr>,
-            override val range: Range,
-        ) : ExtensionCall
-
-        @Serializable
-        data class Record(
-            val callee: Expr,
-            val name: String,
-            val arguments: List<ExprRecordItem>,
-            override val range: Range,
-        ) : ExtensionCall
     }
 
     @Serializable

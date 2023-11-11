@@ -26,9 +26,6 @@ fun temporaryAnyType(): PythonType = PythonType.Raw("Any")
 
 fun CaelDecl.toPython(): List<PythonStmt> {
     return when (this) {
-        is CaelDecl.Module -> TODO()
-        is CaelDecl.Open -> TODO()
-        is CaelDecl.TypeAlias -> emptyList() // TODO
         is Decl.Let.Bare -> {
             val type = temporaryAnyType()
             val value = value.toPython()
@@ -149,9 +146,6 @@ fun CaelExpr.toPython(): PythonExpr {
             callee = callee.toPython(),
             arguments = arguments.map { it.toPython() }
         )
-        is Expr.ExtensionCall.Bare -> TODO()
-        is Expr.ExtensionCall.Record -> TODO()
-        is Expr.ExtensionCall.Tuple -> TODO()
         is Expr.Identifier -> PythonExpr.Identifier(name)
         is Expr.Literal.Float -> PythonExpr.Literal.Float(value)
         is Expr.Literal.Int -> PythonExpr.Literal.Int(value)

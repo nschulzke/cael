@@ -102,40 +102,6 @@ private val prattParser = Pratt(
             val end = expect<Token.RBrace>()
             Expr.Call.Record(callee, args, callee.range..end.range)
         },
-        Token.Dot::class to Pratt.Infix<Expr>(ExprPrecedence.call) { callee, _ ->
-            val identifier = parseIdentifier()
-            when (peek()) {
-                is Token.LParen -> {
-                    expect<Token.LParen>()
-                    val args = mutableListOf<Expr>()
-                    if (peek() !is Token.RParen) {
-                        args.add(parseExpr())
-                        while (peek() is Token.Comma) {
-                            expect<Token.Comma>()
-                            args.add(parseExpr())
-                        }
-                    }
-                    val end = expect<Token.RParen>()
-                    Expr.ExtensionCall.Tuple(callee, identifier.name, args, callee.range..end.range)
-                }
-
-                is Token.LBrace -> {
-                    expect<Token.LBrace>()
-                    val args = mutableListOf<ExprRecordItem>()
-                    if (peek() !is Token.RBrace) {
-                        args.add(parseExprRecordItem())
-                        while (peek() is Token.Comma) {
-                            expect<Token.Comma>()
-                            args.add(parseExprRecordItem())
-                        }
-                    }
-                    val end = expect<Token.RBrace>()
-                    Expr.ExtensionCall.Record(callee, identifier.name, args, callee.range..end.range)
-                }
-
-                else -> Expr.ExtensionCall.Bare(callee, identifier.name, callee.range..identifier.range)
-            }
-        },
     )
 )
 

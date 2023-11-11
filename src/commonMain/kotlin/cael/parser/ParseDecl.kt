@@ -4,30 +4,10 @@ import cael.ast.*
 
 fun PeekableIterator<Token>.parseDecl(): Decl {
     return when (val token = peek()) {
-        is Token.Module -> parseModuleDecl()
-        is Token.Open -> parseOpenDecl()
         is Token.Struct -> parseStructDecl()
         is Token.Let -> parseLetDecl()
         else -> throw Exception("Unexpected token $token")
     }
-}
-
-private fun PeekableIterator<Token>.parseModuleDecl(): Decl.Module {
-    val start = expect<Token.Module>()
-    val (name) = parseIdentifier()
-    expect<Token.Is>()
-    val members = mutableListOf<Decl>()
-    while (peek() !is Token.End) {
-        members.add(parseDecl())
-    }
-    val end = expect<Token.End>()
-    return Decl.Module(name, members, start..end)
-}
-
-private fun PeekableIterator<Token>.parseOpenDecl(): Decl.Open {
-    val start = expect<Token.Open>()
-    val identifier = parseIdentifier()
-    return Decl.Open(identifier.name, start..identifier)
 }
 
 private fun PeekableIterator<Token>.parseStructDecl(): Decl.Struct {
