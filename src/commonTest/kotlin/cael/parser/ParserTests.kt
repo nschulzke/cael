@@ -67,6 +67,38 @@ class ParserTests : DescribeSpec({
             )
         }
 
+        it("should parse a tuple fun declaration with destructuring") {
+            "fun f(Foo(x, y)) => 1".lex().parse() shouldBe Program(
+                declarations = listOf(
+                    Decl.Fun.Tuple(
+                        name = "f",
+                        parameters = listOf(
+                            Pattern.Struct.Tuple(
+                                name = "Foo",
+                                components = listOf(
+                                    Pattern.Identifier(
+                                        name = "x",
+                                        range = Range(11, 1),
+                                    ),
+                                    Pattern.Identifier(
+                                        name = "y",
+                                        range = Range(14, 1),
+                                    ),
+                                ),
+                                range = Range(7, 9),
+                            ),
+                        ),
+                        value = Expr.Literal.Int(
+                            value = 1,
+                            range = Range(21, 1),
+                        ),
+                        range = Range(1, 21),
+                    )
+                ),
+                range = Range(1, 21),
+            )
+        }
+
         it("should parse a record fun declaration") {
             "fun f { x = Int } => 1".lex().parse() shouldBe Program(
                 declarations = listOf(
@@ -90,6 +122,42 @@ class ParserTests : DescribeSpec({
                     )
                 ),
                 range = Range(1, 22),
+            )
+        }
+
+        it("should parse record fun declaration with destructuring") {
+            "fun f { x = Foo(x, y) } => 1".lex().parse() shouldBe Program(
+                declarations = listOf(
+                    Decl.Fun.Record(
+                        name = "f",
+                        parameters = listOf(
+                            PatternRecordItem(
+                                name = "x",
+                                pattern = Pattern.Struct.Tuple(
+                                    name = "Foo",
+                                    components = listOf(
+                                        Pattern.Identifier(
+                                            name = "x",
+                                            range = Range(17, 1),
+                                        ),
+                                        Pattern.Identifier(
+                                            name = "y",
+                                            range = Range(20, 1),
+                                        ),
+                                    ),
+                                    range = Range(13, 9),
+                                ),
+                                range = Range(9, 13),
+                            )
+                        ),
+                        value = Expr.Literal.Int(
+                            value = 1,
+                            range = Range(28, 1),
+                        ),
+                        range = Range(1, 28),
+                    )
+                ),
+                range = Range(1, 28),
             )
         }
     }
