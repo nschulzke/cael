@@ -1,26 +1,25 @@
 package cael.parser
 
 import cael.ast.Expr
-import cael.ast.ExprRecordItem
 import cael.ast.Node
 
 
 private object ExprPrecedence {
-    val or = 1
-    val and = 2
-    val equality = 3
-    val comparison = 4
-    val term = 5
-    val factor = 6
-    val call = 7
+    const val OR = 1
+    const val AND = 2
+    const val EQUALITY = 3
+    const val COMPARISON = 4
+    const val TERM = 5
+    const val FACTOR = 6
+    const val CALL = 7
 }
 
-val binary: PeekableIterator<Token>.(left: Expr, token: Token) -> Expr = { left, token ->
+private val binary: PeekableIterator<Token>.(left: Expr, token: Token) -> Expr = { left, token ->
     val right = parseExpr()
     Expr.Binary(left, token.lexeme, right, left.range..right.range)
 }
 
-val unary: PeekableIterator<Token>.(token: Token) -> Expr = { token ->
+private val unary: PeekableIterator<Token>.(token: Token) -> Expr = { token ->
     val expr = parseExpr()
     Expr.Unary(token.lexeme, expr, token.range..expr.range)
 }
@@ -62,28 +61,28 @@ private val prattParser = Pratt(
         },
     ),
     infixes = mapOf(
-        Token.AmpAmp::class to Pratt.Infix(ExprPrecedence.and, binary),
-        Token.PipePipe::class to Pratt.Infix(ExprPrecedence.or, binary),
+        Token.AmpAmp::class to Pratt.Infix(ExprPrecedence.AND, binary),
+        Token.PipePipe::class to Pratt.Infix(ExprPrecedence.OR, binary),
 
-        Token.EqEq::class to Pratt.Infix(ExprPrecedence.equality, binary),
-        Token.BangEq::class to Pratt.Infix(ExprPrecedence.equality, binary),
-        Token.Lt::class to Pratt.Infix(ExprPrecedence.comparison, binary),
-        Token.LtEq::class to Pratt.Infix(ExprPrecedence.comparison, binary),
-        Token.Gt::class to Pratt.Infix(ExprPrecedence.comparison, binary),
-        Token.GtEq::class to Pratt.Infix(ExprPrecedence.comparison, binary),
+        Token.EqEq::class to Pratt.Infix(ExprPrecedence.EQUALITY, binary),
+        Token.BangEq::class to Pratt.Infix(ExprPrecedence.EQUALITY, binary),
+        Token.Lt::class to Pratt.Infix(ExprPrecedence.COMPARISON, binary),
+        Token.LtEq::class to Pratt.Infix(ExprPrecedence.COMPARISON, binary),
+        Token.Gt::class to Pratt.Infix(ExprPrecedence.COMPARISON, binary),
+        Token.GtEq::class to Pratt.Infix(ExprPrecedence.COMPARISON, binary),
 
-        Token.Plus::class to Pratt.Infix(ExprPrecedence.term, binary),
-        Token.Minus::class to Pratt.Infix(ExprPrecedence.term, binary),
-        Token.Star::class to Pratt.Infix(ExprPrecedence.factor, binary),
-        Token.Slash::class to Pratt.Infix(ExprPrecedence.factor, binary),
-        Token.Percent::class to Pratt.Infix(ExprPrecedence.factor, binary),
+        Token.Plus::class to Pratt.Infix(ExprPrecedence.TERM, binary),
+        Token.Minus::class to Pratt.Infix(ExprPrecedence.TERM, binary),
+        Token.Star::class to Pratt.Infix(ExprPrecedence.FACTOR, binary),
+        Token.Slash::class to Pratt.Infix(ExprPrecedence.FACTOR, binary),
+        Token.Percent::class to Pratt.Infix(ExprPrecedence.FACTOR, binary),
 
-        Token.LParen::class to Pratt.Infix(ExprPrecedence.call) { left, _ ->
+        Token.LParen::class to Pratt.Infix(ExprPrecedence.CALL) { left, _ ->
             val args = parseExprTupleComponents()
             val end = expect<Token.RParen>()
             Expr.Call.Tuple(left, args, left.range..end.range)
         },
-        Token.LBrace::class to Pratt.Infix(ExprPrecedence.call) { callee, _ ->
+        Token.LBrace::class to Pratt.Infix(ExprPrecedence.CALL) { callee, _ ->
             val args = parseExprRecordComponents()
             val end = expect<Token.RBrace>()
             Expr.Call.Record(callee, args, callee.range..end.range)

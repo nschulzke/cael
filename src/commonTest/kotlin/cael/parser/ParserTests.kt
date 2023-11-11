@@ -190,4 +190,130 @@ class ParserTests : DescribeSpec({
             )
         }
     }
+
+    describe("pattern operators") {
+        it("should parse or pattern") {
+            "fun t(Foo | Bar) => 'foobar'".lex().parse() shouldBe Program(
+                declarations = listOf(
+                    Decl.Fun.Tuple(
+                        name = "t",
+                        parameters = listOf(
+                            Pattern.Binary(
+                                left = Pattern.Identifier(
+                                    name = "Foo",
+                                    range = Range(7, 3),
+                                ),
+                                op = "|",
+                                right = Pattern.Identifier(
+                                    name = "Bar",
+                                    range = Range(13, 3),
+                                ),
+                                range = Range(7, 9),
+                            )
+                        ),
+                        value = Expr.Literal.String(
+                            value = "foobar",
+                            range = Range(21, 8),
+                        ),
+                        range = Range(1, 28),
+                    )
+                ),
+                range = Range(1, 28),
+            )
+        }
+
+        it("parses and with lower precedence than or") {
+            "fun t(Foo | Bar & Baz) => 'foobar'".lex().parse() shouldBe Program(
+                declarations = listOf(
+                    Decl.Fun.Tuple(
+                        name = "t",
+                        parameters = listOf(
+                            Pattern.Binary(
+                                left = Pattern.Identifier(
+                                    name = "Foo",
+                                    range = Range(7, 3),
+                                ),
+                                op = "|",
+                                right = Pattern.Binary(
+                                    left = Pattern.Identifier(
+                                        name = "Bar",
+                                        range = Range(13, 3),
+                                    ),
+                                    op = "&",
+                                    right = Pattern.Identifier(
+                                        name = "Baz",
+                                        range = Range(19, 3),
+                                    ),
+                                    range = Range(13, 9),
+                                ),
+                                range = Range(7, 15),
+                            )
+                        ),
+                        value = Expr.Literal.String(
+                            value = "foobar",
+                            range = Range(27, 8),
+                        ),
+                        range = Range(1, 34),
+                    )
+                ),
+                range = Range(1, 34),
+            )
+        }
+
+        it("parses : as the matches operator") {
+            "fun t(foo : Bar) => 'foobar'".lex().parse() shouldBe Program(
+                declarations = listOf(
+                    Decl.Fun.Tuple(
+                        name = "t",
+                        parameters = listOf(
+                            Pattern.Binary(
+                                left = Pattern.Identifier(
+                                    name = "foo",
+                                    range = Range(7, 3),
+                                ),
+                                op = ":",
+                                right = Pattern.Identifier(
+                                    name = "Bar",
+                                    range = Range(13, 3),
+                                ),
+                                range = Range(7, 9),
+                            )
+                        ),
+                        value = Expr.Literal.String(
+                            value = "foobar",
+                            range = Range(21, 8),
+                        ),
+                        range = Range(1, 28),
+                    )
+                ),
+                range = Range(1, 28),
+            )
+        }
+
+        it("parses the not operator") {
+            "fun t(!Foo) => 'foobar'".lex().parse() shouldBe Program(
+                declarations = listOf(
+                    Decl.Fun.Tuple(
+                        name = "t",
+                        parameters = listOf(
+                            Pattern.Unary(
+                                op = "!",
+                                operand = Pattern.Identifier(
+                                    name = "Foo",
+                                    range = Range(8, 3),
+                                ),
+                                range = Range(7, 4),
+                            )
+                        ),
+                        value = Expr.Literal.String(
+                            value = "foobar",
+                            range = Range(16, 8),
+                        ),
+                        range = Range(1, 23),
+                    )
+                ),
+                range = Range(1, 23),
+            )
+        }
+    }
 })
