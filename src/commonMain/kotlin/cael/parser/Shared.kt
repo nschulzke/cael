@@ -1,15 +1,7 @@
 package cael.parser
 
-import cael.ast.ExprRecordItem
 import cael.ast.Pattern
 import cael.ast.PatternRecordItem
-
-fun PeekableIterator<Token>.parseExprRecordItem(): ExprRecordItem {
-    val identifier = parseIdentifier()
-    expect<Token.Eq>()
-    val value = parseExpr()
-    return ExprRecordItem(identifier.name, value, identifier.range..value.range)
-}
 
 fun PeekableIterator<Token>.parseTupleComponents(): MutableList<Pattern> {
     val components = mutableListOf<Pattern>()
