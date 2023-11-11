@@ -2,14 +2,6 @@ package cael.parser
 
 import cael.ast.ExprRecordItem
 import cael.ast.PatternRecordItem
-import cael.ast.TypeRecordItem
-
-fun PeekableIterator<Token>.parseTypeRecordItem(): TypeRecordItem {
-    val identifier = parseIdentifier()
-    expect<Token.Colon>()
-    val type = parseType()
-    return TypeRecordItem(identifier.name, type, identifier.range..type.range)
-}
 
 fun PeekableIterator<Token>.parseExprRecordItem(): ExprRecordItem {
     val identifier = parseIdentifier()

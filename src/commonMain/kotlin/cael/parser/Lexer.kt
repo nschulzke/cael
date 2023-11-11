@@ -12,16 +12,13 @@ class LexerError(val description: String, val coords: Coords) :
 private val keywords = mapOf<String, (Range) -> Token>(
     "dec" to { Token.Dec(it) },
     "end" to { Token.End(it) },
-    "extension" to { Token.Extension(it) },
     "for" to { Token.For(it) },
     "is" to { Token.Is(it) },
     "let" to { Token.Let(it) },
     "match" to { Token.Match(it) },
     "module" to { Token.Module(it) },
     "open" to { Token.Open(it) },
-    "protocol" to { Token.Protocol(it) },
     "struct" to { Token.Struct(it) },
-    "type" to { Token.Type(it) },
 )
 
 fun Path.lex(): Sequence<Token> =

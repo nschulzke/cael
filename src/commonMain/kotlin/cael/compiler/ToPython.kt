@@ -2,12 +2,10 @@ package cael.compiler
 
 import cael.ast.Decl
 import cael.ast.Expr
-import cael.ast.Type
 import cael.ast.Decl as CaelDecl
 import cael.ast.Program as CaelProgram
 import cael.ast.Pattern as CaelPattern
 import cael.ast.Expr as CaelExpr
-import cael.ast.Type as CaelType
 import python.Stmt as PythonStmt
 import python.Expr as PythonExpr
 import python.SourceFile as PythonSourceFile
@@ -31,11 +29,6 @@ fun CaelDecl.toPython(): List<PythonStmt> {
         is CaelDecl.Module -> TODO()
         is CaelDecl.Open -> TODO()
         is CaelDecl.TypeAlias -> emptyList() // TODO
-        is CaelDecl.Protocol -> emptyList() // TODO
-        is CaelDecl.Extension -> emptyList() // TODO
-        is Decl.Dec.Bare -> emptyList() // TODO
-        is Decl.Dec.Record -> emptyList() // TODO
-        is Decl.Dec.Tuple -> emptyList() // TODO
         is Decl.Let.Bare -> {
             val type = temporaryAnyType()
             val value = value.toPython()
@@ -104,7 +97,7 @@ fun CaelDecl.toPython(): List<PythonStmt> {
             val parameters = components.map {
                 PythonStmt.ClassDef.Parameter(
                     name = it.name,
-                    type = it.type.toPython()
+                    type = temporaryAnyType()
                 )
             }
             listOf(
@@ -122,7 +115,7 @@ fun CaelDecl.toPython(): List<PythonStmt> {
             val parameters = components.mapIndexed { index, type ->
                 PythonStmt.ClassDef.Parameter(
                     name = "i$index",
-                    type = type.toPython()
+                    type = temporaryAnyType()
                 )
             }
             listOf(
@@ -168,19 +161,5 @@ fun CaelExpr.toPython(): PythonExpr {
             op = op,
             operand = operand.toPython()
         )
-    }
-}
-
-fun primitivesToPython(name: String): String = when (name) {
-    "Int" -> "int"
-    "Float" -> "float"
-    "String" -> "str"
-    else -> name
-}
-
-fun CaelType.toPython(): PythonType {
-    return when (this) {
-        is Type.Identifier -> PythonType.Raw(primitivesToPython(name))
-        is Type.Union -> TODO()
     }
 }

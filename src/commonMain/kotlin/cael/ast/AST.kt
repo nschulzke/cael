@@ -31,33 +31,12 @@ sealed interface Decl : Node {
     @Serializable
     data class TypeAlias(
         val name: String,
-        val body: Type,
+        val body: Pattern,
         override val range: Range,
     ) : Decl
 
     @Serializable
-    data class Protocol(
-        val name: String,
-        val declarations: List<Declaration>,
-        override val range: Range,
-    ) : Decl {
-        @Serializable
-        sealed interface Declaration
-    }
-
-    @Serializable
-    data class Extension(
-        val structName: String,
-        val protocolName: String?,
-        val declarations: List<Declaration>,
-        override val range: Range,
-    ) : Decl {
-        @Serializable
-        sealed interface Declaration
-    }
-
-    @Serializable
-    sealed interface Struct : Decl, Protocol.Declaration {
+    sealed interface Struct : Decl {
         @Serializable
         data class Bare(
             val name: String,
@@ -67,46 +46,20 @@ sealed interface Decl : Node {
         @Serializable
         data class Tuple(
             val name: String,
-            val components: List<Type>,
+            val components: List<Pattern>,
             override val range: Range,
         ) : Struct
 
         @Serializable
         data class Record(
             val name: String,
-            val components: List<TypeRecordItem>,
+            val components: List<PatternRecordItem>,
             override val range: Range,
         ) : Struct
     }
 
     @Serializable
-    sealed interface Dec : Decl, Protocol.Declaration, Extension.Declaration {
-        @Serializable
-        data class Bare(
-            val name: String,
-            val type: Type,
-            override val range: Range,
-        ) : Dec
-
-        @Serializable
-        data class Tuple(
-            val name: String,
-            val components: List<Type>,
-            val type: Type,
-            override val range: Range,
-        ) : Dec
-
-        @Serializable
-        data class Record(
-            val name: String,
-            val components: List<TypeRecordItem>,
-            val type: Type,
-            override val range: Range,
-        ) : Dec
-    }
-
-    @Serializable
-    sealed interface Let : Decl, Extension.Declaration {
+    sealed interface Let : Decl {
         @Serializable
         data class Bare(
             val name: String,
@@ -130,22 +83,6 @@ sealed interface Decl : Node {
             override val range: Range,
         ) : Let
     }
-}
-
-@Serializable
-sealed interface Type : Node {
-    @Serializable
-    data class Identifier(
-        val name: String,
-        override val range: Range,
-    ) : Type
-
-    @Serializable
-    data class Union(
-        val left: Type,
-        val right: Type,
-        override val range: Range,
-    ) : Type
 }
 
 @Serializable
@@ -295,13 +232,6 @@ sealed interface Pattern : Node {
         ) : Pattern
     }
 }
-
-@Serializable
-data class TypeRecordItem(
-    val name: String,
-    val type: Type,
-    override val range: Range,
-) : Node
 
 @Serializable
 data class ExprRecordItem(

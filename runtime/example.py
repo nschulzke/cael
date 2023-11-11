@@ -10,12 +10,12 @@ class Foo:
 
 @dataclass()
 class Bar:
-    i0: str
+    i0: Any
 
 
 @dataclass(kw_only=True)
 class Baz:
-    property: Bar
+    property: Any
 
 
 zero: Any = 0

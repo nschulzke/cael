@@ -19,12 +19,6 @@ sealed interface Token {
         override val lexeme = "end"
     }
 
-    data class Extension(
-        override val range: Range
-    ) : Token {
-        override val lexeme = "extension"
-    }
-
     data class For(
         override val range: Range
     ) : Token {
@@ -61,22 +55,10 @@ sealed interface Token {
         override val lexeme = "open"
     }
 
-    data class Protocol(
-        override val range: Range
-    ) : Token {
-        override val lexeme = "protocol"
-    }
-
     data class Struct(
         override val range: Range
     ) : Token {
         override val lexeme = "struct"
-    }
-
-    data class Type(
-        override val range: Range
-    ) : Token {
-        override val lexeme = "type"
     }
 
     data class LBrace(

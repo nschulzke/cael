@@ -28,16 +28,13 @@ class LexerTests : DescribeSpec({
             nameFn = { "keyword: ${it.first}" },
             "dec" to Token.Dec(singleTokenRange(3)),
             "end" to Token.End(singleTokenRange(3)),
-            "extension" to Token.Extension(singleTokenRange(9)),
             "for" to Token.For(singleTokenRange(3)),
             "is" to Token.Is(singleTokenRange(2)),
             "let" to Token.Let(singleTokenRange(3)),
             "match" to Token.Match(singleTokenRange(5)),
             "module" to Token.Module(singleTokenRange(6)),
             "open" to Token.Open(singleTokenRange(4)),
-            "protocol" to Token.Protocol(singleTokenRange(8)),
             "struct" to Token.Struct(singleTokenRange(6)),
-            "type" to Token.Type(singleTokenRange(4)),
             test = shouldLexToToken,
         )
     }
