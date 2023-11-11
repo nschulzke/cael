@@ -23,28 +23,14 @@ private fun PeekableIterator<Token>.parseStructDecl(): Decl.Struct {
 
 private fun PeekableIterator<Token>.parseTupleStructPartial(start: Token.Struct, name: String): Decl.Struct.Tuple {
     expect<Token.LParen>()
-    val components = mutableListOf<Pattern>()
-    if (peek() !is Token.RParen) {
-        components.add(parsePattern())
-        while (peek() is Token.Comma) {
-            expect<Token.Comma>()
-            components.add(parsePattern())
-        }
-    }
+    val components = parseTupleComponents()
     val end = expect<Token.RParen>()
     return Decl.Struct.Tuple(name, components, start..end)
 }
 
 private fun PeekableIterator<Token>.parseRecordStructPartial(start: Token.Struct, name: String): Decl.Struct.Record {
     expect<Token.LBrace>()
-    val components = mutableListOf<PatternRecordItem>()
-    if (peek() !is Token.RBrace) {
-        components.add(parsePatternRecordItem())
-        while (peek() is Token.Comma) {
-            expect<Token.Comma>()
-            components.add(parsePatternRecordItem())
-        }
-    }
+    val components = parseRecordComponents()
     val end = expect<Token.RBrace>()
     return Decl.Struct.Record(name, components, start..end)
 }
@@ -69,14 +55,7 @@ private fun PeekableIterator<Token>.parseFunDecl(): Decl.Fun {
 
 private fun PeekableIterator<Token>.parseTupleFunPartial(start: Token.Fun, name: String): Decl.Fun.Tuple {
     expect<Token.LParen>()
-    val components = mutableListOf<Pattern>()
-    if (peek() !is Token.RParen) {
-        components.add(parsePattern())
-        while (peek() is Token.Comma) {
-            expect<Token.Comma>()
-            components.add(parsePattern())
-        }
-    }
+    val components = parseTupleComponents()
     expect<Token.RParen>()
     expect<Token.Arrow>()
     val value = parseExpr()
@@ -85,14 +64,7 @@ private fun PeekableIterator<Token>.parseTupleFunPartial(start: Token.Fun, name:
 
 private fun PeekableIterator<Token>.parseRecordFunPartial(start: Token.Fun, name: String): Decl.Fun.Record {
     expect<Token.LBrace>()
-    val components = mutableListOf<PatternRecordItem>()
-    if (peek() !is Token.RBrace) {
-        components.add(parsePatternRecordItem())
-        while (peek() is Token.Comma) {
-            expect<Token.Comma>()
-            components.add(parsePatternRecordItem())
-        }
-    }
+    val components = parseRecordComponents()
     expect<Token.RBrace>()
     expect<Token.Arrow>()
     val value = parseExpr()
