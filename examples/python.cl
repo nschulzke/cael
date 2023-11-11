@@ -9,8 +9,6 @@ let barObj = Bar("test")
 let bazObj = Baz { property = Bar("bazTest") }
 
 fun something(Foo) => None
-# let something(Bar(string)) = string
-# let something(Baz { property = Bar(string) }) = string
 
 let test = something(barObj)
 
