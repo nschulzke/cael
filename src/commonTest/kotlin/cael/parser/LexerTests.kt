@@ -9,13 +9,13 @@ import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.equals.shouldBeEqual
 
 fun singleTokenRange(length: Int, start: Int = 1, line: Int = 1) = Range(
-    Coords("file", line, start),
-    Coords("file", line, start + length - 1)
+    Coords(line, start),
+    Coords(line, start + length - 1)
 )
 
 fun range(startLine: Int, startCol: Int, endLine: Int, endCol: Int) = Range(
-    Coords("file", startLine, startCol),
-    Coords("file", endLine, endCol),
+    Coords(startLine, startCol),
+    Coords(endLine, endCol),
 )
 
 val shouldLexToToken: suspend ContainerScope.(Pair<String, Token>) -> Unit = { (string, token) ->
@@ -239,8 +239,8 @@ class LexerTests : DescribeSpec({
             """.trimIndent().lex().toList()
             lexed shouldContainExactly listOf(
                 Token.StringLiteral("a", Range(
-                    Coords("file", 2, 1),
-                    Coords("file", 2, 3),
+                    Coords(2, 1),
+                    Coords(2, 3),
                 )),
             )
         }
@@ -254,12 +254,12 @@ class LexerTests : DescribeSpec({
             """.trimIndent().lex().toList()
             lexed shouldContainExactly listOf(
                 Token.StringLiteral("a", Range(
-                    Coords("file", 1, 1),
-                    Coords("file", 1, 3),
+                    Coords(1, 1),
+                    Coords(1, 3),
                 )),
                 Token.StringLiteral("b", Range(
-                    Coords("file", 2, 1),
-                    Coords("file", 2, 3),
+                    Coords(2, 1),
+                    Coords(2, 3),
                 )),
             )
         }

@@ -6,8 +6,8 @@ import cael.io.asSequenceUtf8
 import cael.io.toSource
 import okio.*
 
-class LexerError(val description: String, val coords: Coords) :
-    Error("Lexing error at ${coords.filename}:${coords.line}:${coords.col} $description")
+class LexerError(val filename: String, val description: String, val coords: Coords) :
+    Error("Lexing error at $filename:${coords.line}:${coords.col} $description")
 
 private val keywords = mapOf<String, (Range) -> Token>(
     "let" to { Token.Let(it) },
@@ -67,7 +67,7 @@ class CharIterator(
 
     private var startCoords = coords()
 
-    fun coords() = Coords(filename, line, col)
+    fun coords() = Coords(line, col)
 
     fun markStart() {
         startCoords = coords()
@@ -193,7 +193,7 @@ object Mode {
                             val parsed = lexIdentifier(c)
                             yield(parsed)
                         } else {
-                            throw LexerError("Unexpected character: $c", coords())
+                            throw LexerError(filename, "Unexpected character: $c", coords())
                         }
                     }
                 }
@@ -233,7 +233,7 @@ object Mode {
                                     }
 
                                     else -> {
-                                        throw LexerError("Invalid unicode escape sequence: \\u$c3", coords())
+                                        throw LexerError(filename, "Invalid unicode escape sequence: \\u$c3", coords())
                                     }
                                 }
                             }
@@ -248,7 +248,7 @@ object Mode {
                             markStart()
                         }
 
-                        else -> throw LexerError("Unexpected escape sequence: \\$c2", coords())
+                        else -> throw LexerError(filename, "Unexpected escape sequence: \\$c2", coords())
                     }
                 } else if (c == closingChar) {
                     if (builder.isNotEmpty()) {
@@ -260,7 +260,7 @@ object Mode {
                     builder.append(c)
                 }
             }
-            throw LexerError("Unterminated string literal", coords())
+            throw LexerError(filename, "Unterminated string literal", coords())
         }
     }
 
@@ -331,12 +331,12 @@ fun Sequence<Token>.consolidateStringLiterals(): Sequence<Token> {
     }
 }
 
-fun Sequence<Char>.lex(): Sequence<Token> {
-    val iterator = CharIterator("file", iterator())
+fun Sequence<Char>.lex(filename: String = "file"): Sequence<Token> {
+    val iterator = CharIterator(filename, iterator())
     return sequence {
         yieldAll(Mode.normal(iterator))
         if (iterator.hasNext()) {
-            throw LexerError("Unexpected character: ${iterator.next()}", iterator.coords())
+            throw LexerError(filename, "Unexpected character: ${iterator.next()}", iterator.coords())
         }
     }.consolidateStringLiterals()
 }

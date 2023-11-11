@@ -4,7 +4,6 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class Coords(
-    val filename: String,
     val line: Int,
     val col: Int,
 ) {
