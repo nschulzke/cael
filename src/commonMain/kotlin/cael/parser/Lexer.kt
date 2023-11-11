@@ -214,55 +214,60 @@ object Mode {
             while (hasNext()) {
                 val c = next()
                 val charOffset = offset
-                if (c == '\\') {
-                    when (val c2 = next()) {
-                        'n' -> builder.append('\n')
-                        'r' -> builder.append('\r')
-                        't' -> builder.append('\t')
-                        '\\' -> builder.append('\\')
-                        closingChar -> builder.append(closingChar)
-                        'u' -> {
-                            val codepoint = (0..3).fold(0) { acc, _ ->
-                                val c3 = next()
-                                when (c3) {
-                                    in '0'..'9' -> {
-                                        acc * 16 + (c3 - '0')
-                                    }
+                when (c) {
+                    '\\' -> {
+                        when (val c2 = next()) {
+                            'n' -> builder.append('\n')
+                            'r' -> builder.append('\r')
+                            't' -> builder.append('\t')
+                            '\\' -> builder.append('\\')
+                            closingChar -> builder.append(closingChar)
+                            'u' -> {
+                                val codepoint = (0..3).fold(0) { acc, _ ->
+                                    val c3 = next()
+                                    when (c3) {
+                                        in '0'..'9' -> {
+                                            acc * 16 + (c3 - '0')
+                                        }
 
-                                    in 'a'..'f' -> {
-                                        acc * 16 + (c3 - 'a') + 10
-                                    }
+                                        in 'a'..'f' -> {
+                                            acc * 16 + (c3 - 'a') + 10
+                                        }
 
-                                    in 'A'..'F' -> {
-                                        acc * 16 + (c3 - 'A') + 10
-                                    }
+                                        in 'A'..'F' -> {
+                                            acc * 16 + (c3 - 'A') + 10
+                                        }
 
-                                    else -> {
-                                        throw LexerError(filename, line, col, "Invalid unicode escape sequence: \\u$c3")
+                                        else -> {
+                                            throw LexerError(filename, line, col, "Invalid unicode escape sequence: \\u$c3")
+                                        }
                                     }
                                 }
+                                builder.append(codepoint.toChar())
                             }
-                            builder.append(codepoint.toChar())
-                        }
-                        '(' -> {
-                            if (builder.isNotEmpty()) {
-                                yield(Token.StringLiteralSegment(builder.toString(), builder.clear()))
-                            }
-                            yield(Token.BeginInterpolating(Range(charOffset, 2)))
-                            yieldAll(stringInterpolation())
-                            markStart()
-                        }
 
-                        else -> throw LexerError(filename, line, col, "Unexpected escape sequence: \\$c2")
+                            '(' -> {
+                                if (builder.isNotEmpty()) {
+                                    yield(Token.StringLiteralSegment(builder.toString(), builder.clear()))
+                                }
+                                yield(Token.BeginInterpolating(Range(charOffset, 2)))
+                                yieldAll(stringInterpolation())
+                                markStart()
+                            }
+
+                            else -> throw LexerError(filename, line, col, "Unexpected escape sequence: \\$c2")
+                        }
                     }
-                } else if (c == closingChar) {
-                    if (builder.isNotEmpty()) {
-                        yield(Token.StringLiteralSegment(builder.toString(), builder.clear()))
+                    closingChar -> {
+                        if (builder.isNotEmpty()) {
+                            yield(Token.StringLiteralSegment(builder.toString(), builder.clear()))
+                        }
+                        yield(Token.EndString(Range(offset, 1)))
+                        return@sequence
                     }
-                    yield(Token.EndString(Range(offset, 1)))
-                    return@sequence
-                } else {
-                    builder.append(c)
+                    else -> {
+                        builder.append(c)
+                    }
                 }
             }
             throw LexerError(filename, line, col, "Unterminated string literal")
