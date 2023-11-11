@@ -40,7 +40,7 @@ sealed interface Decl : Node {
 
     @Serializable
     data class Let(
-        val name: String,
+        val pattern: Pattern,
         val value: Expr,
         override val range: Range,
     ) : Decl

@@ -51,10 +51,10 @@ private fun PeekableIterator<Token>.parseRecordStructPartial(start: Token.Struct
 
 private fun PeekableIterator<Token>.parseLetDecl(): Decl.Let {
     val start = expect<Token.Let>()
-    val (name) = parseIdentifier()
+    val pattern = parsePattern()
     expect<Token.Eq>()
     val value = parseExpr()
-    return Decl.Let(name, value, start.range..value.range)
+    return Decl.Let(pattern, value, start.range..value.range)
 }
 
 private fun PeekableIterator<Token>.parseFunDecl(): Decl.Fun {

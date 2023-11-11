@@ -10,7 +10,7 @@ class ParserTests : DescribeSpec({
             "let x = 1".lex().parse() shouldBe Program(
                 declarations = listOf(
                     Decl.Let(
-                        name = "x",
+                        pattern = Pattern.Identifier("x", Range(5, 1)),
                         value = Expr.Literal.Int(
                             value = 1,
                             range = Range(9, 1),
@@ -19,6 +19,35 @@ class ParserTests : DescribeSpec({
                     )
                 ),
                 range = Range(1, 9),
+            )
+        }
+
+        it("should support destructuring in let declaration") {
+            "let Foo(x, y) = foo".lex().parse() shouldBe Program(
+                declarations = listOf(
+                    Decl.Let(
+                        pattern = Pattern.Struct.Tuple(
+                            name = "Foo",
+                            components = listOf(
+                                Pattern.Identifier(
+                                    name = "x",
+                                    range = Range(9, 1),
+                                ),
+                                Pattern.Identifier(
+                                    name = "y",
+                                    range = Range(12, 1),
+                                ),
+                            ),
+                            range = Range(5, 9),
+                        ),
+                        value = Expr.Identifier(
+                            name = "foo",
+                            range = Range(17, 3),
+                        ),
+                        range = Range(1, 19),
+                    )
+                ),
+                range = Range(1, 19),
             )
         }
     }

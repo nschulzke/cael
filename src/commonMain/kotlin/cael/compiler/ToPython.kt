@@ -27,11 +27,14 @@ fun temporaryAnyType(): PythonType = PythonType.Raw("Any")
 fun CaelDecl.toPython(): List<PythonStmt> {
     return when (this) {
         is Decl.Let -> {
+            if (pattern !is CaelPattern.Identifier) {
+                TODO()
+            }
             val type = temporaryAnyType()
             val value = value.toPython()
             listOf(
                 PythonStmt.Assignment(
-                    name = name,
+                    name = pattern.name,
                     type = type,
                     value = value
                 )
