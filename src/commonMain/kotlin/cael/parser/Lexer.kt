@@ -66,21 +66,16 @@ class CharIterator(
     var offset: Int = 0
         private set
 
-    var length: Int = 0
-        private set
-
     private var startOffset = offset
 
     fun markStart() {
         startOffset = offset
-        length = 0
     }
 
     fun range() = Range(startOffset..offset)
 
     override val onNext: ((Char?) -> Unit) = {
         offset++
-        length++
         if (it == '\n') {
             line++
             col = 0
