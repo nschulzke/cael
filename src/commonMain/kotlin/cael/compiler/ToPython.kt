@@ -128,8 +128,6 @@ fun CaelDecl.toPython(): List<PythonStmt> {
                 )
             )
         }
-
-        is Decl.Struct.Match -> TODO()
     }
 }
 
