@@ -30,6 +30,17 @@ class RangeTests : DescribeSpec({
             """.trimMargin()
         }
 
+        it("correctly marks single-character ranges") {
+            val fileContents = FileContents("foo.cl", "hello world")
+            val range = Range(3, 1)
+            fileContents.printRange(range) shouldBeEqual """
+                |  --> foo.cl:1:4
+                |   |
+                | 1 | hello world
+                |   |    ^
+            """.trimMargin()
+        }
+
         it("handles correctly for large line numbers") {
             val fileContents = FileContents("foo.cl", "\n".repeat(100) + "hello world")
             val range = Range(100, 5)
