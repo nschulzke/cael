@@ -13,11 +13,6 @@ private val binary: PeekableIterator<Token>.(left: Pattern, token: Token) -> Pat
     Pattern.Binary(left, token.lexeme, right, left.range..right.range)
 }
 
-private val unary: PeekableIterator<Token>.(token: Token) -> Pattern = { token ->
-    val pattern = parsePattern()
-    Pattern.Unary(token.lexeme, pattern, token.range..pattern.range)
-}
-
 private val prattParser = Pratt(
     prefixes = mapOf(
         Token.Identifier::class to Pratt.Prefix { token ->
@@ -31,7 +26,6 @@ private val prattParser = Pratt(
         Token.Pipe::class to Pratt.Prefix {
             parsePattern() // Leading | is okay
         },
-        Token.Bang::class to Pratt.Prefix(unary),
         Token.IntLiteral::class to Pratt.Prefix {
             Pattern.Literal.Int((it as Token.IntLiteral).value, it.range)
         },

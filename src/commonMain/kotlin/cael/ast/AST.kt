@@ -238,12 +238,6 @@ sealed interface Pattern : Node {
         val right: Pattern,
         override val range: Range,
     ) : Pattern
-
-    data class Unary(
-        val op: String,
-        val operand: Pattern,
-        override val range: Range,
-    ) : Pattern
 }
 
 @Serializable

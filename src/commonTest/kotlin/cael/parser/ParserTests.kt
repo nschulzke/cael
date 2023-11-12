@@ -333,32 +333,6 @@ class ParserTests : DescribeSpec({
                 range = Range(1, 28),
             )
         }
-
-        it("parses the not operator") {
-            "fun t(!Foo) => 'foobar'".lex().parse() shouldBe Program(
-                declarations = listOf(
-                    Decl.Fun.Tuple(
-                        name = "t",
-                        parameters = listOf(
-                            Pattern.Unary(
-                                op = "!",
-                                operand = Pattern.Identifier(
-                                    name = "Foo",
-                                    range = Range(8, 3),
-                                ),
-                                range = Range(7, 4),
-                            )
-                        ),
-                        value = Expr.Literal.String(
-                            value = "foobar",
-                            range = Range(16, 8),
-                        ),
-                        range = Range(1, 23),
-                    )
-                ),
-                range = Range(1, 23),
-            )
-        }
     }
 
     describe("match expression") {
