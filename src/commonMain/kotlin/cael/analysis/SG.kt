@@ -28,26 +28,34 @@ sealed interface Type {
     }
 
     sealed interface StructConstructor : Type {
+        val struct: Struct
+
         @Serializable
         data class Bare(
             val name: String,
-        ) : StructConstructor
+        ) : StructConstructor {
+            override val struct = Struct(this)
+        }
 
         @Serializable
         data class Tuple(
             val name: String,
             val components: List<Type>,
-        ) : StructConstructor
+        ) : StructConstructor {
+            override val struct = Struct(this)
+        }
 
         @Serializable
         data class Record(
             val name: String,
             val components: List<TypeRecordItem>,
-        ) : StructConstructor
+        ) : StructConstructor {
+            override val struct = Struct(this)
+        }
     }
 
     @Serializable
-    data class Struct(val node: Decl.Struct) : Type
+    data class Struct(val constructor: StructConstructor) : Type
 
     @Serializable
     sealed interface Fun : Type {
@@ -67,7 +75,7 @@ sealed interface Type {
         ) : Fun
     }
 
-    sealed interface Error : Type, StructConstructor {
+    sealed interface Error : Type {
         fun primaryError(): Primary
 
         sealed interface Primary : Error {
@@ -374,7 +382,7 @@ sealed interface Pattern : Node {
         @Serializable
         data class Bare(
             val name: String,
-            override val typeMatched: Type.StructConstructor,
+            override val typeMatched: Type.Struct,
             override val range: Range,
         ) : Pattern {
             override fun boundNames(): List<BoundName> {
@@ -386,7 +394,7 @@ sealed interface Pattern : Node {
         data class Tuple(
             val name: String,
             val components: List<Pattern>,
-            override val typeMatched: Type.StructConstructor,
+            override val typeMatched: Type.Struct,
             override val range: Range,
         ) : Pattern {
             override fun boundNames(): List<BoundName> {
@@ -398,7 +406,7 @@ sealed interface Pattern : Node {
         data class Record(
             val name: String,
             val components: List<PatternRecordItem>,
-            override val typeMatched: Type.StructConstructor,
+            override val typeMatched: Type.Struct,
             override val range: Range,
         ) : Pattern {
             override fun boundNames(): List<BoundName> {

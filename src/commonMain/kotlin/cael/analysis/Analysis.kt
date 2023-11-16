@@ -92,6 +92,7 @@ fun ASTExpr.analyze(environment: Environment, expectedType: Type? = null): Expr 
                 when (val actualType = environment.findType(name)) {
                     null -> Type.Error.UnboundName(name, this.range)
                     is Type.Error -> Type.Error.Propagated(actualType)
+                    is Type.StructConstructor.Bare -> assertEquals(actualType.struct, expectedType, this.range)
                     else -> assertEquals(actualType, expectedType, this.range)
                 },
                 range
@@ -140,7 +141,7 @@ fun ASTPattern.analyze(environment: Environment, expectedType: Type? = null): Pa
                 return Pattern.Wildcard(expectedType ?: Type.Error.Other("Unable to infer type of wildcard", this.range), range)
             }
             when (val environmentType = environment.findType(name)) {
-                is Type.StructConstructor -> Pattern.Struct.Bare(name, environmentType, range)
+                is Type.StructConstructor -> Pattern.Struct.Bare(name, environmentType.struct, range)
                 else -> {
                     val type = expectedType ?: Type.Error.Other("Unable to infer type of `$name`", this.range)
                     Pattern.NameBinding(name, type, range).also {

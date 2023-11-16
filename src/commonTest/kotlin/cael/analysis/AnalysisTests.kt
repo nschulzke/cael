@@ -55,12 +55,13 @@ class AnalysisTests : DescribeSpec({
                 let x = Foo
             """.trimIndent().lex().parse().analyze()
             program.declarations.size shouldBeEqual 2
-            val expectedType = Type.StructConstructor.Bare("Foo")
+            val expectedConstructorType = Type.StructConstructor.Bare("Foo")
+            val expectedType = expectedConstructorType.struct
 
             program.declarations[0].apply {
                 this.shouldBeTypeOf<Decl.Struct.Bare>()
                 range shouldBeEqual Range(1, 10)
-                constructorType shouldBeEqual expectedType
+                constructorType shouldBeEqual expectedConstructorType
             }
             program.declarations[1].apply {
                 this.shouldBeTypeOf<Decl.Let>()
