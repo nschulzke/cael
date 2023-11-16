@@ -8,7 +8,6 @@ import cael.ast.PatternRecordItem
 fun PeekableIterator<Token>.parseExprTupleComponents(): MutableList<Expr> {
     val args = mutableListOf<Expr>()
     if (peek() !is Token.RParen) {
-        args.add(parseExpr())
         do {
             args.add(parseExpr())
         } while (match<Token.Comma>())
@@ -53,9 +52,9 @@ fun PeekableIterator<Token>.parsePatternRecordComponents(): MutableList<PatternR
 }
 
 fun PeekableIterator<Token>.parseIdentifier(): Token.Identifier {
-    val token = nextOrNull() ?: throw Exception("Expected identifier, got EOF")
+    val token = nextOrNull() ?: throw ParseError("Expected identifier, got end of file", lastRange())
     return when (token) {
         is Token.Identifier -> token
-        else -> throw Exception("Expected identifier, got $token")
+        else -> throw ParseError("Expected identifier, got `${token.lexeme}`", token.range)
     }
 }
