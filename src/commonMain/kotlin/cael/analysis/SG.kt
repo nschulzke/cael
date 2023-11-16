@@ -10,21 +10,29 @@ sealed interface Type {
     data object Any
 
     @Serializable
-    sealed interface Primitive : Type {
+    sealed interface Primitive : StructConstructor {
         @Serializable
         sealed interface Number : Primitive
 
         @Serializable
-        data object Int : Number
+        data object Int : Number {
+            override val struct: Struct = Struct(this)
+        }
 
         @Serializable
-        data object Float : Number
+        data object Float : Number {
+            override val struct: Struct = Struct(this)
+        }
 
         @Serializable
-        data object String : Primitive
+        data object String : Primitive {
+            override val struct: Struct = Struct(this)
+        }
 
         @Serializable
-        data object Boolean : Primitive
+        data object Boolean : Primitive {
+            override val struct: Struct = Struct(this)
+        }
     }
 
     sealed interface StructConstructor : Type {
@@ -61,18 +69,35 @@ sealed interface Type {
     sealed interface Fun : Type {
         @Serializable
         data class Tuple(
-            val node: Decl.Fun.Tuple
+            val parameters: List<Type>,
+            val returnType: Type,
         ) : Fun
 
         @Serializable
         data class Record(
-            val node: Decl.Fun.Record
+            val parameters: List<TypeRecordItem>,
+            val returnType: Type,
         ) : Fun
 
         @Serializable
         data class Match(
-            val node: Decl.Fun.Match
-        ) : Fun
+            val cases: List<Case>,
+        ) : Fun {
+            @Serializable
+            sealed interface Case {
+                @Serializable
+                data class Tuple(
+                    val parameters: List<Type>,
+                    val returnType: Type,
+                ) : Case
+
+                @Serializable
+                data class Record(
+                    val parameters: List<TypeRecordItem>,
+                    val returnType: Type,
+                ) : Case
+            }
+        }
     }
 
     sealed interface Error : Type {
@@ -233,7 +258,7 @@ sealed interface Expr : Node {
             val value: kotlin.Int,
             override val range: Range,
         ) : Literal {
-            override val type = Type.Primitive.Int
+            override val type = Type.Primitive.Int.struct
         }
 
         @Serializable
@@ -241,7 +266,7 @@ sealed interface Expr : Node {
             val value: Double,
             override val range: Range,
         ) : Literal {
-            override val type = Type.Primitive.Float
+            override val type = Type.Primitive.Float.struct
         }
 
         @Serializable
@@ -249,7 +274,7 @@ sealed interface Expr : Node {
             val value: kotlin.String,
             override val range: Range,
         ) : Literal {
-            override val type = Type.Primitive.String
+            override val type = Type.Primitive.String.struct
         }
     }
 
@@ -310,7 +335,7 @@ sealed interface Expr : Node {
 sealed interface Pattern : Node {
     val typeMatched: Type
     fun boundNames(): List<BoundName>
-    
+
     @Serializable
     data class BoundName(
         val name: String,

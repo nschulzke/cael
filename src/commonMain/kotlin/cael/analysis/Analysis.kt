@@ -13,19 +13,25 @@ class Environment(
 
     private data class RegistryEntry(
         val type: Type,
-        val node: Node,
+        val node: Node?,
     )
 
     fun findType(name: String): Type? {
         return definitions[name]?.type ?: parent?.findType(name)
     }
 
-    fun register(name: String, type: Type, node: Node) {
+    fun register(name: String, type: Type, node: Node?) {
         definitions[name] = RegistryEntry(type, node)
     }
 }
 
-fun ASTProgram.analyze(environment: Environment = Environment()): Program {
+fun rootEnvironment(): Environment = Environment().apply {
+    register("Int", Type.Primitive.Int, null)
+    register("Float", Type.Primitive.Float, null)
+    register("String", Type.Primitive.String, null)
+}
+
+fun ASTProgram.analyze(environment: Environment = rootEnvironment()): Program {
     val newDeclarations = mutableListOf<Decl>()
     for (decl in declarations) {
         newDeclarations.add(decl.analyze(environment))
@@ -54,7 +60,13 @@ fun ASTDecl.analyze(environment: Environment): Decl {
             node
         }
         is ASTDecl.Struct.Record -> TODO()
-        is ASTDecl.Struct.Tuple -> TODO()
+        is ASTDecl.Struct.Tuple -> {
+            val analyzedComponents = components.map { it.analyze(environment) }
+            val type = Type.StructConstructor.Tuple(name, analyzedComponents.map { it.typeMatched })
+            val node = Decl.Struct.Tuple(type, range)
+            environment.register(name, type, node)
+            node
+        }
     }
 }
 
@@ -85,7 +97,36 @@ fun ASTExpr.analyze(environment: Environment, expectedType: Type? = null): Expr 
             Expr.Binary(analyzedLeft, op, analyzedRight, type, range)
         }
         is ASTExpr.Call.Record -> TODO()
-        is ASTExpr.Call.Tuple -> TODO()
+        is ASTExpr.Call.Tuple -> {
+            val analyzedCallee = callee.analyze(environment)
+            val analyzedArguments = arguments.map { it.analyze(environment) }
+            val type = when (val calleeType = analyzedCallee.type) {
+                is Type.Fun.Tuple -> {
+                    if (calleeType.parameters.size != analyzedArguments.size) {
+                        Type.Error.Other("Expected ${calleeType.parameters.size} arguments, got ${analyzedArguments.size}", range)
+                    } else {
+                        for ((expected, actual) in calleeType.parameters.zip(analyzedArguments)) {
+                            assertEquals(actual.type, expected, actual.range)
+                        }
+                        calleeType.returnType
+                    }
+                }
+                is Type.Fun.Record -> TODO()
+                is Type.StructConstructor.Tuple -> {
+                    if (calleeType.components.size != analyzedArguments.size) {
+                        Type.Error.Other("Expected ${calleeType.components.size} arguments, got ${analyzedArguments.size}", range)
+                    } else {
+                        for ((expected, actual) in calleeType.components.zip(analyzedArguments)) {
+                            assertEquals(actual.type, expected, actual.range)
+                        }
+                        calleeType.struct
+                    }
+                }
+                is Type.StructConstructor.Record -> TODO()
+                else -> Type.Error.Other("Expected callable, got ${analyzedCallee.type}", analyzedCallee.range)
+            }
+            Expr.Call.Tuple(analyzedCallee, analyzedArguments, type, range)
+        }
         is ASTExpr.Identifier -> {
             Expr.Identifier(
                 name,
