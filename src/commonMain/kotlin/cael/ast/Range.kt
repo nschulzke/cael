@@ -9,6 +9,15 @@ data class FileContents(
 ) {
     constructor(fileName: String, fileContents: String) : this(fileName, fileContents.split("\n"))
 
+    fun printError(error: PrintableError): String = """
+${error.message}
+${printRange(error.range)}
+    """
+
+    fun rethrowError(error: PrintableError): Nothing {
+        throw Error(printError(error))
+    }
+
     fun printRange(range: Range): String {
         return this.printRange(makeLineCol(range))
     }
@@ -97,6 +106,11 @@ data class FileContents(
             |$paddingPart
         """.trimMargin()
     }
+}
+
+interface PrintableError {
+    val message: String
+    val range: Range
 }
 
 @Serializable

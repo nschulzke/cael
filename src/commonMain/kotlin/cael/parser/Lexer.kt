@@ -1,12 +1,11 @@
 package cael.parser
 
+import cael.ast.FileContents
 import cael.ast.Range
 import cael.io.asSequenceUtf8
+import cael.io.asString
 import cael.io.toSource
 import okio.*
-
-class LexerError(val filename: String, val line: Int, val col: Int, val description: String) :
-    Error("Lexing error at $filename:${line}:${col} $description")
 
 private val keywords = mapOf<String, (Range) -> Token>(
     "let" to { Token.Let(it) },
@@ -16,16 +15,36 @@ private val keywords = mapOf<String, (Range) -> Token>(
 )
 
 fun Path.lex(): Sequence<Token> =
-    this.toSource().lex()
+    try {
+        this.toSource().lex()
+    } catch (e: LexError) {
+        FileContents(
+            fileName = "file",
+            fileContents = toSource().asString()
+        ).rethrowError(e)
+    }
 
 fun Source.lex(): Sequence<Token> =
-    this.asSequenceUtf8().lex()
+    try {
+        this.asSequenceUtf8().lex()
+    } catch (e: LexError) {
+        FileContents(
+            fileName = "file",
+            fileContents = asString()
+        ).rethrowError(e)
+    }
 
 fun String.lex(): Sequence<Token> =
-    this.asSequence().lex()
+    try {
+        this.asSequence().lex()
+    } catch (e: LexError) {
+        FileContents(
+            fileName = "file",
+            fileContents = this
+        ).rethrowError(e)
+    }
 
 class CharIterator(
-    val filename: String,
     iterator: Iterator<Char>,
 ) : PeekableIterator<Char>(iterator) {
     inner class CoordsStringBuilder(
@@ -193,7 +212,7 @@ object Mode {
                             val parsed = lexIdentifier(c)
                             yield(parsed)
                         } else {
-                            throw LexerError(filename, line, col, "Unexpected character: $c")
+                            throw LexError("Unexpected character: `$c`", Range(offset, 1))
                         }
                     }
                 }
@@ -234,7 +253,10 @@ object Mode {
                                         }
 
                                         else -> {
-                                            throw LexerError(filename, line, col, "Invalid unicode escape sequence: \\u$c3")
+                                            throw LexError(
+                                                "Invalid unicode escape sequence: `\\u$c3`",
+                                                Range(charOffset, 6)
+                                            )
                                         }
                                     }
                                 }
@@ -250,9 +272,10 @@ object Mode {
                                 markStart()
                             }
 
-                            else -> throw LexerError(filename, line, col, "Unexpected escape sequence: \\$c2")
+                            else -> throw LexError("Unexpected escape sequence: `\\$c2`", Range(charOffset, 2))
                         }
                     }
+
                     closingChar -> {
                         if (builder.isNotEmpty()) {
                             yield(Token.StringLiteralSegment(builder.toString(), builder.clear()))
@@ -260,12 +283,13 @@ object Mode {
                         yield(Token.EndString(Range(offset, 1)))
                         return@sequence
                     }
+
                     else -> {
                         builder.append(c)
                     }
                 }
             }
-            throw LexerError(filename, line, col, "Unterminated string literal")
+            throw LexError("Unterminated string literal", Range(offset, 0))
         }
     }
 
@@ -279,10 +303,12 @@ object Mode {
                     ' ', '\t', '\r', '\n' -> {
                         next()
                     }
+
                     '(' -> {
                         parens++
                         yield(delegate.next())
                     }
+
                     ')' -> {
                         if (--parens == 0) {
                             next()
@@ -292,6 +318,7 @@ object Mode {
                             yield(delegate.next())
                         }
                     }
+
                     else -> {
                         yield(delegate.next())
                     }
@@ -336,12 +363,12 @@ fun Sequence<Token>.consolidateStringLiterals(): Sequence<Token> {
     }
 }
 
-fun Sequence<Char>.lex(filename: String = "file"): Sequence<Token> {
-    val iterator = CharIterator(filename, iterator())
+fun Sequence<Char>.lex(): Sequence<Token> {
+    val iterator = CharIterator(iterator())
     return sequence {
         yieldAll(Mode.normal(iterator))
         if (iterator.hasNext()) {
-            throw LexerError(filename, 0, 0, "Unexpected character: ${iterator.next()}")
+            throw LexError("Unexpected character: ${iterator.next()}", Range(0, 0))
         }
     }.consolidateStringLiterals()
 }

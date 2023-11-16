@@ -12,7 +12,7 @@ class AnalysisTests : DescribeSpec({
         it("analyzes a simple int let") {
             val program = """
                 let x = 5
-            """.trimIndent().lex().parse().analyze()
+            """.trimIndent().parse().analyze()
             program.declarations.size shouldBeEqual 1
             program.declarations[0].apply {
                 this.shouldBeTypeOf<Decl.Let>()
@@ -32,7 +32,7 @@ class AnalysisTests : DescribeSpec({
         it("analyzes a simple string let") {
             val program = """
                 let x = "hello world"
-            """.trimIndent().lex().parse().analyze()
+            """.trimIndent().parse().analyze()
             program.declarations.size shouldBeEqual 1
             program.declarations[0].apply {
                 this.shouldBeTypeOf<Decl.Let>()
@@ -53,7 +53,7 @@ class AnalysisTests : DescribeSpec({
             val program = """
                 struct Foo
                 let x = Foo
-            """.trimIndent().lex().parse().analyze()
+            """.trimIndent().parse().analyze()
             program.declarations.size shouldBeEqual 2
             val expectedConstructorType = Type.StructConstructor.Bare("Foo")
             val expectedType = expectedConstructorType.struct

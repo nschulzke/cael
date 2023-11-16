@@ -14,7 +14,7 @@ class CaelC : CliktCommand() {
 
     override fun run() {
         try {
-            val program = input.toPath().lex().parse()
+            val program = input.toPath().parse()
             val python = program.toPython()
             val output = output ?: input.replace(".cl", ".py")
             output.toPath().write(python)

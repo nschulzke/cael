@@ -7,7 +7,7 @@ fun PeekableIterator<Token>.parseDecl(): Decl {
         is Token.Struct -> parseStructDecl()
         is Token.Let -> parseLetDecl()
         is Token.Fun -> parseFunDecl()
-        else -> throw Exception("Unexpected token $token")
+        else -> throw ParseError("Unexpected token `${token.lexeme}`", token.range)
     }
 }
 
@@ -50,7 +50,8 @@ private fun PeekableIterator<Token>.parseFunDecl(): Decl.Fun {
         is Token.LParen -> parseTupleFunPartial(start, name)
         is Token.LBrace -> parseRecordFunPartial(start, name)
         is Token.Pipe -> parseMatchFunPartial(start, name)
-        else -> throw Exception("Unexpected token ${peekOrNull()}")
+        null -> throw ParseError("Unexpected end of file", start.range)
+        else -> throw ParseError("Unexpected token `${peek()}`", peek().range)
     }
 }
 
@@ -78,7 +79,8 @@ private fun PeekableIterator<Token>.parseMatchFunPartial(start: Token.Fun, name:
         when (peekOrNull()) {
             is Token.LParen -> cases.add(parseTupleMatchFunCase())
             is Token.LBrace -> cases.add(parseRecordMatchFunCase())
-            else -> throw Exception("Unexpected token ${peekOrNull()}")
+            null -> throw ParseError("Unexpected end of file", lastRange())
+            else -> throw ParseError("Unexpected token `${peek()}`", peek().range)
         }
     }
     return Decl.Fun.Match(name, cases, start.range..cases.last().range)

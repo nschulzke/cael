@@ -17,14 +17,14 @@ class Pratt<T : Node>(
     )
 
     fun PeekableIterator<Token>.parse(precedence: Int): T {
-        var token = nextOrNull() ?: throw Exception("Expected token, got null")
-        val prefix = prefixes[token::class] ?: throw Exception("Expected prefix, got $token")
+        var token = nextOrNull() ?: throw ParseError("Expected token, got end of file", lastRange())
+        val prefix = prefixes[token::class] ?: throw ParseError("Expected prefix, got `${token.lexeme}`", token.range)
 
         var left = prefix.parse(this, token)
 
         while (precedence < getPrecendence()) {
-            token = nextOrNull() ?: throw Exception("Expected token, got null")
-            val infix = infixes[token::class] ?: throw Exception("Expected infix, got $token")
+            token = nextOrNull() ?: throw ParseError("Expected token, got end of file", lastRange())
+            val infix = infixes[token::class] ?: throw ParseError("Expected infix, got `${token.lexeme}`", token.range)
             left = infix.parse(this, left, token)
         }
 

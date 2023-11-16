@@ -7,7 +7,7 @@ import io.kotest.matchers.shouldBe
 class ParserTests : DescribeSpec({
     describe("let declaration") {
         it("should parse a simple let declaration") {
-            "let x = 1".lex().parse() shouldBe Program(
+            "let x = 1".parse() shouldBe Program(
                 declarations = listOf(
                     Decl.Let(
                         pattern = Pattern.Identifier("x", Range(5, 1)),
@@ -23,7 +23,7 @@ class ParserTests : DescribeSpec({
         }
 
         it("should support destructuring in let declaration") {
-            "let Foo(x, y) = foo".lex().parse() shouldBe Program(
+            "let Foo(x, y) = foo".parse() shouldBe Program(
                 declarations = listOf(
                     Decl.Let(
                         pattern = Pattern.Struct.Tuple(
@@ -54,7 +54,7 @@ class ParserTests : DescribeSpec({
 
     describe("fun declaration") {
         it("should parse a simple fun declaration") {
-            "fun f() => 1".lex().parse() shouldBe Program(
+            "fun f() => 1".parse() shouldBe Program(
                 declarations = listOf(
                     Decl.Fun.Tuple(
                         name = "f",
@@ -71,7 +71,7 @@ class ParserTests : DescribeSpec({
         }
 
         it("should parse a tuple fun declaration") {
-            "fun f(x, y) => 1".lex().parse() shouldBe Program(
+            "fun f(x, y) => 1".parse() shouldBe Program(
                 declarations = listOf(
                     Decl.Fun.Tuple(
                         name = "f",
@@ -97,7 +97,7 @@ class ParserTests : DescribeSpec({
         }
 
         it("should parse a tuple fun declaration with destructuring") {
-            "fun f(Foo(x, y)) => 1".lex().parse() shouldBe Program(
+            "fun f(Foo(x, y)) => 1".parse() shouldBe Program(
                 declarations = listOf(
                     Decl.Fun.Tuple(
                         name = "f",
@@ -129,7 +129,7 @@ class ParserTests : DescribeSpec({
         }
 
         it("should parse a record fun declaration") {
-            "fun f { x = Int } => 1".lex().parse() shouldBe Program(
+            "fun f { x = Int } => 1".parse() shouldBe Program(
                 declarations = listOf(
                     Decl.Fun.Record(
                         name = "f",
@@ -155,7 +155,7 @@ class ParserTests : DescribeSpec({
         }
 
         it("should parse record fun declaration with destructuring") {
-            "fun f { x = Foo(x, y) } => 1".lex().parse() shouldBe Program(
+            "fun f { x = Foo(x, y) } => 1".parse() shouldBe Program(
                 declarations = listOf(
                     Decl.Fun.Record(
                         name = "f",
@@ -191,7 +191,7 @@ class ParserTests : DescribeSpec({
         }
 
         it("parses a fun decl with two arms") {
-            "fun f | (Bar) => 1 | { baz = Baz } => 2".lex().parse() shouldBe Program(
+            "fun f | (Bar) => 1 | { baz = Baz } => 2".parse() shouldBe Program(
                 declarations = listOf(
                     Decl.Fun.Match(
                         name = "f",
@@ -235,9 +235,93 @@ class ParserTests : DescribeSpec({
         }
     }
 
+    describe("struct declaration") {
+        it("parses a simple bare struct declaration") {
+            "struct Foo".parse() shouldBe Program(
+                declarations = listOf(
+                    Decl.Struct.Bare(
+                        name = "Foo",
+                        range = Range(1, 10),
+                    )
+                ),
+                range = Range(1, 10),
+            )
+        }
+
+        it("parses a simple tuple struct declaration") {
+            "struct Foo(Int)".parse() shouldBe Program(
+                declarations = listOf(
+                    Decl.Struct.Tuple(
+                        name = "Foo",
+                        components = listOf(
+                            Pattern.Identifier(
+                                name = "Int",
+                                range = Range(12, 3),
+                            )
+                        ),
+                        range = Range(1, 15),
+                    )
+                ),
+                range = Range(1, 15),
+            )
+        }
+
+        it("parses a simple record struct declaration") {
+            "struct Foo { x = Int }".parse() shouldBe Program(
+                declarations = listOf(
+                    Decl.Struct.Record(
+                        name = "Foo",
+                        components = listOf(
+                            PatternRecordItem(
+                                name = "x",
+                                pattern = Pattern.Identifier(
+                                    name = "Int",
+                                    range = Range(18, 3),
+                                ),
+                                range = Range(14, 7),
+                            )
+                        ),
+                        range = Range(1, 22),
+                    )
+                ),
+                range = Range(1, 22),
+            )
+        }
+    }
+
+    describe("call expressions") {
+        it("parses a tuple call") {
+            "let x = Foo(1)".parse() shouldBe Program(
+                declarations = listOf(
+                    Decl.Let(
+                        pattern = Pattern.Identifier(
+                            name = "x",
+                            range = Range(5, 1),
+                        ),
+                        value = Expr.Call.Tuple(
+                            callee = Expr.Identifier(
+                                name = "Foo",
+                                range = Range(9, 3),
+                            ),
+                            arguments = listOf(
+                                Expr.Literal.Int(
+                                    value = 1,
+                                    range = Range(13, 1),
+                                )
+                            ),
+                            range = Range(9, 6),
+                        ),
+                        range = Range(1, 14),
+                    )
+                ),
+                range = Range(1, 14),
+            )
+        }
+    }
+
     describe("pattern operators") {
         it("should parse or pattern") {
-            "fun t(Foo | Bar) => 'foobar'".lex().parse() shouldBe Program(
+            "fun t(Foo | Bar) => 'foobar'".parse() shouldBe Program(
                 declarations = listOf(
                     Decl.Fun.Tuple(
                         name = "t",
@@ -267,7 +351,7 @@ class ParserTests : DescribeSpec({
         }
 
         it("parses and with lower precedence than or") {
-            "fun t(Foo | Bar & Baz) => 'foobar'".lex().parse() shouldBe Program(
+            "fun t(Foo | Bar & Baz) => 'foobar'".parse() shouldBe Program(
                 declarations = listOf(
                     Decl.Fun.Tuple(
                         name = "t",
@@ -305,7 +389,7 @@ class ParserTests : DescribeSpec({
         }
 
         it("parses : as the matches operator") {
-            "fun t(foo : Bar) => 'foobar'".lex().parse() shouldBe Program(
+            "fun t(foo : Bar) => 'foobar'".parse() shouldBe Program(
                 declarations = listOf(
                     Decl.Fun.Tuple(
                         name = "t",
@@ -337,7 +421,7 @@ class ParserTests : DescribeSpec({
 
     describe("match expression") {
         it("parses a match expression with two arms") {
-            "let x = match foo | Bar => 1 | Baz => 2".lex().parse() shouldBe Program(
+            "let x = match foo | Bar => 1 | Baz => 2".parse() shouldBe Program(
                 declarations = listOf(
                     Decl.Let(
                         pattern = Pattern.Identifier(

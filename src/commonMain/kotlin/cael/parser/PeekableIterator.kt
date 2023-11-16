@@ -1,9 +1,16 @@
 package cael.parser
 
+import cael.ast.Range
+
 open class PeekableIterator<T>(
     private val iterator: Iterator<T>,
 ) : Iterator<T> {
     private var peek: T? = if (iterator.hasNext()) iterator.next() else null
+    private var last: T? = null
+
+    fun lastRange(): Range {
+        return (last as? Token)?.range ?: Range(0, 0)
+    }
 
     protected open val onNext: ((T?) -> Unit)? = null
 
@@ -18,6 +25,7 @@ open class PeekableIterator<T>(
     fun nextOrNull(): T? {
         return peek.also {
             onNext?.invoke(it)
+            last = it
             peek = if (iterator.hasNext()) iterator.next() else null
         }
     }
@@ -39,14 +47,6 @@ open class PeekableIterator<T>(
         }
     }
 
-    fun expect(token: T): T {
-        return if (peekOrNull() == token) {
-            next()
-        } else {
-            throw Exception("Expected $token, got ${peekOrNull()}")
-        }
-    }
-
     inline fun <reified T : Token> match(): Boolean {
         return if (peekOrNull() is T) {
             next()
@@ -57,10 +57,11 @@ open class PeekableIterator<T>(
     }
 
     inline fun <reified T : Token> expect(): T {
-        return if (peekOrNull() is T) {
-            next() as T
-        } else {
-            throw Exception("Expected ${T::class.simpleName}, got ${peekOrNull()}")
+        @Suppress("UNNECESSARY_NOT_NULL_ASSERTION")
+        return when (val peeked = peekOrNull()) {
+            is T -> next() as T
+            null -> throw ParseError("Expected `${T::class.simpleName}`, got end of file", lastRange())
+            else -> throw ParseError("Expected `${T::class.simpleName}`, got `${peeked!!::class.simpleName}`", (peeked as Token).range)
         }
     }
 }
