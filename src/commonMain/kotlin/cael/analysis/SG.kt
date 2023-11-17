@@ -407,7 +407,7 @@ sealed interface Pattern : Node {
         @Serializable
         data class Bare(
             val name: String,
-            override val typeMatched: Type.Struct,
+            override val typeMatched: Type,
             override val range: Range,
         ) : Pattern {
             override fun boundNames(): List<BoundName> {
@@ -419,7 +419,7 @@ sealed interface Pattern : Node {
         data class Tuple(
             val name: String,
             val components: List<Pattern>,
-            override val typeMatched: Type.Struct,
+            override val typeMatched: Type,
             override val range: Range,
         ) : Pattern {
             override fun boundNames(): List<BoundName> {
@@ -431,7 +431,7 @@ sealed interface Pattern : Node {
         data class Record(
             val name: String,
             val components: List<PatternRecordItem>,
-            override val typeMatched: Type.Struct,
+            override val typeMatched: Type,
             override val range: Range,
         ) : Pattern {
             override fun boundNames(): List<BoundName> {

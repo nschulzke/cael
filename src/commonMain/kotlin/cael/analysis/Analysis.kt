@@ -176,7 +176,24 @@ fun ASTPattern.analyze(environment: Environment, expectedType: Type? = null): Pa
         is ASTPattern.Literal.Int -> TODO()
         is ASTPattern.Struct.Record -> TODO()
         is ASTPattern.Literal.String -> TODO()
-        is ASTPattern.Struct.Tuple -> TODO()
+        is ASTPattern.Struct.Tuple -> {
+            return when (val constructorType = environment.findType(name)) {
+                is Type.StructConstructor.Tuple -> {
+                    val analyzedComponents = components.zip(constructorType.components).map { (component, expected) ->
+                        component.analyze(environment, expected)
+                    }
+                    Pattern.Struct.Tuple(name, analyzedComponents, constructorType.struct, range)
+                }
+                null -> {
+                    val analyzedComponents = components.map { it.analyze(environment) }
+                    Pattern.Struct.Tuple(name, analyzedComponents, Type.Error.UnboundName(name, range), range)
+                }
+                else -> {
+                    val analyzedComponents = components.map { it.analyze(environment) }
+                    Pattern.Struct.Tuple(name, analyzedComponents, Type.Error.Other("$name is not a tuple struct, it is a $constructorType", range), range)
+                }
+            }
+        }
         is ASTPattern.Identifier -> {
             if (name == "_") {
                 return Pattern.Wildcard(expectedType ?: Type.Error.Other("Unable to infer type of wildcard", this.range), range)

@@ -122,5 +122,29 @@ class AnalysisTests : DescribeSpec({
             }
             environment.findType("x")!! shouldBeEqual expectedType
         }
+
+        it("binds a name from a destructured tuple struct") {
+            val environment = rootEnvironment()
+            val program = """
+                struct Foo(Int)
+                let Foo(x) = Foo(1)
+            """.trimIndent().parse().analyze(environment)
+            program.declarations.size shouldBeEqual 2
+            val expectedConstructorType = Type.StructConstructor.Tuple("Foo", listOf(Type.Primitive.Int.struct))
+            val expectedType = expectedConstructorType.struct
+
+            program.declarations[1].apply {
+                this.shouldBeTypeOf<Decl.Let>()
+                pattern.typeMatched shouldBeEqual expectedType
+                pattern.boundNames().apply {
+                    size shouldBeEqual 1
+                    this[0].apply {
+                        name shouldBeEqual "x"
+                        type shouldBeEqual Type.Primitive.Int.struct
+                    }
+                }
+            }
+            environment.findType("x")!! shouldBeEqual Type.Primitive.Int.struct
+        }
     }
 })
