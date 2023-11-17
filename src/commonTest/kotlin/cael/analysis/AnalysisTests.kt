@@ -5,6 +5,7 @@ import cael.parser.lex
 import cael.parser.parse
 import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.matchers.equals.shouldBeEqual
+import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.types.shouldBeTypeOf
 
 class AnalysisTests : DescribeSpec({
@@ -131,6 +132,78 @@ class AnalysisTests : DescribeSpec({
             """.trimIndent().parse().analyze(environment)
             program.declarations.size shouldBeEqual 2
             val expectedConstructorType = Type.StructConstructor.Tuple("Foo", listOf(Type.Primitive.Int.struct))
+            val expectedType = expectedConstructorType.struct
+
+            program.declarations[1].apply {
+                this.shouldBeTypeOf<Decl.Let>()
+                pattern.typeMatched shouldBeEqual expectedType
+                pattern.boundNames().apply {
+                    size shouldBeEqual 1
+                    this[0].apply {
+                        name shouldBeEqual "x"
+                        type shouldBeEqual Type.Primitive.Int.struct
+                    }
+                }
+            }
+            environment.findType("x")!! shouldBeEqual Type.Primitive.Int.struct
+        }
+
+        it("binds a name to a full record struct") {
+            val environment = rootEnvironment()
+            val program = """
+                struct Foo { x = Int }
+                let x = Foo { x = 1 }
+            """.trimIndent().parse().analyze(environment)
+            program.declarations.size shouldBeEqual 2
+            val expectedConstructorType = Type.StructConstructor.Record("Foo", mapOf("x" to Type.Primitive.Int.struct))
+            val expectedType = expectedConstructorType.struct
+
+            program.declarations[0].apply {
+                this.shouldBeTypeOf<Decl.Struct.Record>()
+                constructorType shouldBeEqual expectedConstructorType
+            }
+            program.declarations[1].apply {
+                this.shouldBeTypeOf<Decl.Let>()
+                pattern.typeMatched shouldBeEqual expectedType
+                pattern.boundNames().apply {
+                    size shouldBeEqual 1
+                    this[0].apply {
+                        name shouldBeEqual "x"
+                        type shouldBeEqual expectedType
+                    }
+                }
+                value.apply {
+                    shouldBeTypeOf<Expr.Call.Record>()
+                    callee.apply {
+                        shouldBeTypeOf<Expr.Identifier>()
+                        name shouldBeEqual "Foo"
+                        type shouldBeEqual expectedConstructorType
+                    }
+                    arguments.apply {
+                        size shouldBeEqual 1
+                        this["x"].apply {
+                            shouldNotBeNull()
+                            value.apply {
+                                shouldBeTypeOf<Expr.Literal.Int>()
+                                value shouldBeEqual 1
+                                type shouldBeEqual Type.Primitive.Int.struct
+                            }
+                        }
+                    }
+                    type shouldBeEqual expectedType
+                }
+            }
+            environment.findType("x")!! shouldBeEqual expectedType
+        }
+
+        it("binds a name from a destructured record struct") {
+            val environment = rootEnvironment()
+            val program = """
+                struct Foo { x = Int }
+                let Foo { x = x } = Foo { x = 1 }
+            """.trimIndent().parse().analyze(environment)
+            program.declarations.size shouldBeEqual 2
+            val expectedConstructorType = Type.StructConstructor.Record("Foo", mapOf("x" to Type.Primitive.Int.struct))
             val expectedType = expectedConstructorType.struct
 
             program.declarations[1].apply {

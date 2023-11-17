@@ -59,7 +59,16 @@ fun ASTDecl.analyze(environment: Environment): Decl {
             environment.register(name, type, node)
             node
         }
-        is ASTDecl.Struct.Record -> TODO()
+        is ASTDecl.Struct.Record -> {
+            val analyzedComponents = components.map { (name, type) ->
+                val analyzedType = type.analyze(environment).typeMatched
+                name to analyzedType
+            }.toMap()
+            val type = Type.StructConstructor.Record(name, analyzedComponents)
+            val node = Decl.Struct.Record(type, range)
+            environment.register(name, type, node)
+            node
+        }
         is ASTDecl.Struct.Tuple -> {
             val analyzedComponents = components.map { it.analyze(environment) }
             val type = Type.StructConstructor.Tuple(name, analyzedComponents.map { it.typeMatched })
@@ -96,7 +105,23 @@ fun ASTExpr.analyze(environment: Environment, expectedType: Type? = null): Expr 
             }
             Expr.Binary(analyzedLeft, op, analyzedRight, type, range)
         }
-        is ASTExpr.Call.Record -> TODO()
+        is ASTExpr.Call.Record -> {
+            val analyzedCallee = callee.analyze(environment)
+            val analyzedArguments = arguments.map { (name, argument, range) ->
+                val expected = when (val calleeType = analyzedCallee.type) {
+                    is Type.Fun.Record -> calleeType.parameters[name] ?: Type.Error.Other("Unknown component `$name`", range)
+                    is Type.StructConstructor.Record -> calleeType.components[name] ?: Type.Error.Other("Unknown component `$name`", range)
+                    else -> Type.Error.Other("Expected callable, got ${analyzedCallee.type}", analyzedCallee.range)
+                }
+                name to ExprRecordItem(argument.analyze(environment, expected), range)
+            }.toMap()
+            val type = when (val calleeType = analyzedCallee.type) {
+                is Type.Fun.Record -> calleeType.returnType
+                is Type.StructConstructor.Record -> calleeType.struct
+                else -> Type.Error.Other("Expected callable, got ${analyzedCallee.type}", analyzedCallee.range)
+            }
+            Expr.Call.Record(analyzedCallee, analyzedArguments, type, range)
+        }
         is ASTExpr.Call.Tuple -> {
             val analyzedCallee = callee.analyze(environment)
             val analyzedArguments = arguments.map { it.analyze(environment) }
@@ -174,8 +199,30 @@ fun ASTPattern.analyze(environment: Environment, expectedType: Type? = null): Pa
         is ASTPattern.Binary -> TODO()
         is ASTPattern.Literal.Float -> TODO()
         is ASTPattern.Literal.Int -> TODO()
-        is ASTPattern.Struct.Record -> TODO()
         is ASTPattern.Literal.String -> TODO()
+        is ASTPattern.Struct.Record -> {
+            return when (val constructorType = environment.findType(name)) {
+                is Type.StructConstructor.Record -> {
+                    val analyzedComponents = components.map { (name, component, range) ->
+                        val expected = constructorType.components[name] ?: Type.Error.Other("Unknown component `$name`", component.range)
+                        name to PatternRecordItem(component.analyze(environment, expected), range)
+                    }.toMap()
+                    Pattern.Struct.Record(name, analyzedComponents, constructorType.struct, range)
+                }
+                null -> {
+                    val analyzedComponents = components.map { (name, component, range) ->
+                        name to PatternRecordItem(component.analyze(environment), range)
+                    }.toMap()
+                    Pattern.Struct.Record(name, analyzedComponents, Type.Error.UnboundName(name, range), range)
+                }
+                else -> {
+                    val analyzedComponents = components.map { (name, component, range) ->
+                        name to PatternRecordItem(component.analyze(environment), range)
+                    }.toMap()
+                    Pattern.Struct.Record(name, analyzedComponents, Type.Error.Other("$name is not a record struct, it is a $constructorType", range), range)
+                }
+            }
+        }
         is ASTPattern.Struct.Tuple -> {
             return when (val constructorType = environment.findType(name)) {
                 is Type.StructConstructor.Tuple -> {

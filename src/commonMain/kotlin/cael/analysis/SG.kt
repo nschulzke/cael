@@ -56,7 +56,7 @@ sealed interface Type {
         @Serializable
         data class Record(
             val name: String,
-            val components: List<TypeRecordItem>,
+            val components: Map<String, Type>,
         ) : StructConstructor {
             override val struct = Struct(this)
         }
@@ -75,7 +75,7 @@ sealed interface Type {
 
         @Serializable
         data class Record(
-            val parameters: List<TypeRecordItem>,
+            val parameters: Map<String, Type>,
             val returnType: Type,
         ) : Fun
 
@@ -93,7 +93,7 @@ sealed interface Type {
 
                 @Serializable
                 data class Record(
-                    val parameters: List<TypeRecordItem>,
+                    val parameters: Map<String, Type>,
                     val returnType: Type,
                 ) : Case
             }
@@ -185,7 +185,7 @@ sealed interface Decl : Node {
 
         @Serializable
         data class Record(
-            override val constructorType: Type.StructConstructor.Tuple,
+            override val constructorType: Type.StructConstructor.Record,
             override val range: Range,
         ) : Struct
     }
@@ -210,7 +210,7 @@ sealed interface Decl : Node {
         @Serializable
         data class Record(
             val name: String,
-            val parameters: List<PatternRecordItem>,
+            val parameters: Map<String, PatternRecordItem>,
             val value: Expr,
             override val range: Range,
         ) : Fun
@@ -231,7 +231,7 @@ sealed interface Decl : Node {
 
                 @Serializable
                 data class Record(
-                    val parameters: List<PatternRecordItem>,
+                    val parameters: Map<String, PatternRecordItem>,
                     val value: Expr,
                     override val range: Range,
                 ) : Case
@@ -291,7 +291,7 @@ sealed interface Expr : Node {
         @Serializable
         data class Record(
             val callee: Expr,
-            val arguments: List<ExprRecordItem>,
+            val arguments: Map<String, ExprRecordItem>,
             override val type: Type,
             override val range: Range,
         ) : Call
@@ -430,12 +430,12 @@ sealed interface Pattern : Node {
         @Serializable
         data class Record(
             val name: String,
-            val components: List<PatternRecordItem>,
+            val components: Map<String, PatternRecordItem>,
             override val typeMatched: Type,
             override val range: Range,
         ) : Pattern {
             override fun boundNames(): List<BoundName> {
-                return components.flatMap { it.pattern.boundNames() }
+                return components.flatMap { it.value.pattern.boundNames() }
             }
         }
     }
@@ -465,22 +465,13 @@ sealed interface Pattern : Node {
 }
 
 @Serializable
-data class TypeRecordItem(
-    val name: String,
-    val type: Type,
-    override val range: Range,
-) : Node
-
-@Serializable
 data class ExprRecordItem(
-    val name: String,
     val value: Expr,
     override val range: Range,
 ) : Node
 
 @Serializable
 data class PatternRecordItem(
-    val name: String,
     val pattern: Pattern,
     override val range: Range,
 ) : Node
