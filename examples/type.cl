@@ -12,23 +12,23 @@ type Quz =
   | Baz
 
 protocol Test is
-  dec testMethod { self : Self } : String
+  fun testMethod { self : Self } -> String
 end
 
 extension Foo : Test is
-  let testMethod { self = Self } = "Foo"
+  fun testMethod { self = Self } => "Foo"
 end
 
 protocol List is
-  dec length(Self) : Int
+  fun length(Self) -> Int
 end
 
 extension Foo : List is
-  let length(Self) = 0
+  fun length(Self) => 0
 end
 
-dec zero : Int
-let zero = Foo.length()
+fun zero -> Int
+  | zero => Foo.length()
 
 let foo = Foo.testMethod {}
 
@@ -37,15 +37,17 @@ let barObj = Bar("test")
 let bazObj = Baz { property = Bar("bazTest") }
 
 
-dec something(Quz) : String | None # Can be inferred
-let something(Foo) = None
-let something(Bar(string)) = string
-let something(Baz { property = Bar(string) }) = string
+fun something(Quz) -> String | None
+  | (Foo) => None
+  | (Bar(string)) => string
+  | (Baz { property = Bar(string) }) => string
 
 let test = function(barObj)
 
-dec recordFun { arg1 : String, arg2 : Int } : String
-let recordFun { arg1 = arg1, arg2 = arg2 } = arg1
+fun recordFun { arg1 : String, arg2 : Int } -> String
+  | { arg1 = arg1, arg2 = arg2 } => arg1
+
+fun singleMatchFun { arg1 = Bar(string) } => string
 
 let test2 = recordFun { arg1 = "test", arg2 = 1 }
 
@@ -134,3 +136,17 @@ let test3 =
 #   | unionType
 #   | "(" type ")"
 # unionType = type "|" type
+
+
+# The key ideas in this language are:
+#   Expression-oriented
+#   Effect handlers
+#   Tuples and Records
+#   Sum types (unions) and product types (structs)
+#   Pattern matching
+
+# Union types can replace sealed interface hierarchies, but not open interface hierarchies
+# I'm currently thinking to use protocols as implemented above for the open hierarchies
+# We'll need type parameters so that we can say "this function returns the same type that it accepts" or similar
+
+# Do we use ML's function application syntax? is foo(bar) actually parsed as (call foo (tuple (bar)))?
